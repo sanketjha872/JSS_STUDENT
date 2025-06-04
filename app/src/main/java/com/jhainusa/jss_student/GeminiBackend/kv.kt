@@ -1,4 +1,4 @@
-package com.jhainusa.jss_student
+package com.jhainusa.jss_student.GeminiBackend
 
 import okhttp3.OkHttpClient
 import retrofit2.Call
