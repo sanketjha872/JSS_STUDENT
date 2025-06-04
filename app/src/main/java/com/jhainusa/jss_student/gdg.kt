@@ -1,0 +1,112 @@
+package com.jhainusa.jss_student
+
+import android.R
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.util.Base64
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
+import com.jhainusa.jss_student.RoomDatabase.Schedule
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+
+
+fun encodeImageToBase64(inputStream: InputStream): String {
+    val bitmap = BitmapFactory.decodeStream(inputStream)
+
+    // Resize if width > 800
+    val resizedBitmap = if (bitmap.width > 800) {
+        val aspectRatio = bitmap.height.toDouble() / bitmap.width
+        Bitmap.createScaledBitmap(bitmap, 800, (800 * aspectRatio).toInt(), true)
+    } else bitmap
+
+    val outputStream = ByteArrayOutputStream()
+    resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 40, outputStream) // Compress more (40%)
+
+    return Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+}
+
+
+fun sendToGemini(apiKey: String, base64Image: String,vIewModel: MainVIewModel, onResult: (Boolean) -> Unit) {
+    val request = GeminiRequest(
+        contents = listOf(
+            Content(
+                parts = listOf(
+                    Part(text = "Extract this timetable into JSON format with fields like day, subject,time and teacher." +
+                            "and don't give me subject code like BAS 403 etc only give subject name like MATHS and teacher which is like AD and day like Mon case"),
+                    Part(inline_data = InlineData("image/jpeg", base64Image))
+                )
+            )
+        )
+    )
+
+    GeminiClient.instance.generateContent(apiKey, request).enqueue(object : Callback<GeminiResponse> {
+        override fun onResponse(call: Call<GeminiResponse>, response: Response<GeminiResponse>) {
+            if (response.isSuccessful && response.body() != null) {
+                val jsonString =
+                    response.body()!!.candidates[0].content.parts[0].text.replace("```json", "")
+                        .replace("```", "")
+                        .trim()
+                val jsonArray = JSONArray(jsonString)
+                for (i in 0 until jsonArray.length()) {
+                    val item = jsonArray.getJSONObject(i)
+                    val day = item.getString("day")
+                    val time = item.getString("time")
+                    val subject = item.getString("subject")
+                    val teacher = item.getString("teacher")
+                    vIewModel.insertSchedule(
+                        Schedule(
+                            day =day,
+                            subject = subject,
+                            time = time,
+                            teacher = teacher
+                        )
+                    )
+
+                    Log.d("Timetable", "Day: $day, Subject: $subject ,time : $time , teacher : $teacher")
+                }
+                onResult(true)
+            }
+        }
+
+        override fun onFailure(call: Call<GeminiResponse>, t: Throwable) {
+            onResult(false)
+        }
+    })
+}
