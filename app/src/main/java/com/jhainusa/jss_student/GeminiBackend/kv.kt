@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.jvm.java
 
 interface GeminiApiService {
-    @POST("v1beta/models/gemini-1.5-flash:generateContent")
+    @POST("v1beta/models/gemini-2.5-flash:generateContent")
     fun generateContent(
         @Query("key") apiKey: String,
         @Body body: GeminiRequest

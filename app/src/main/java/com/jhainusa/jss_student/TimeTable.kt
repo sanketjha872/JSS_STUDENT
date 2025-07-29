@@ -104,7 +104,7 @@ fun showSchedule(VIewModel: MainVIewModel){
     dateandTime(day = state, ondaySelected = {state = it})
     Spacer(modifier = Modifier.height(5.dp))
     val t = if(state<10) "0"+state else state
-    ScheduleTimeline(VIewModel,LocalDate.parse("2025-05-${t}").dayOfWeek.getDisplayName(
+    ScheduleTimeline(VIewModel,LocalDate.parse("2025-06-${t}").dayOfWeek.getDisplayName(
         TextStyle.SHORT,
         Locale.getDefault()))
 }
@@ -158,13 +158,13 @@ fun ScheduleItemRow(item: Schedule) {
         ) {
             Text(
                 text = item.time,
-                modifier = Modifier.width(60.dp),
+                modifier = Modifier.width(42.dp),
                 color = Color.Gray,
                 fontFamily = plusJak,
                 fontSize = 14.sp
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(30.dp))
 
             classComp(
                 time = item.time,
@@ -207,7 +207,7 @@ fun dateandTime(day : Int, ondaySelected : (Int) -> Unit){
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = LocalDate.parse("2025-05-${t}").dayOfWeek.getDisplayName(
+                        text = LocalDate.parse("2025-06-${t}").dayOfWeek.getDisplayName(
                             TextStyle.SHORT,
                             Locale.getDefault()
                         ),

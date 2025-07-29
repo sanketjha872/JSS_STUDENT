@@ -2,6 +2,7 @@ package com.jhainusa.jss_student.RoomDatabase
 
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 
@@ -12,5 +13,9 @@ interface ScheduleDao {
 
     @Query("SELECT * FROM schedule WHERE day = :day ORDER BY time DESC ")
     fun getbyDay(day : String) : LiveData<List<Schedule>>
+
+    @Query("DELETE FROM schedule")
+    suspend fun delete()
+
 
 }

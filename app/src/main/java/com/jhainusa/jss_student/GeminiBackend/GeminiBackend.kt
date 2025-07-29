@@ -37,7 +37,8 @@ fun sendToGemini(apiKey: String, base64Image: String,vIewModel: MainVIewModel, o
                 parts = listOf(
                     Part(
                         text = "Extract this timetable into JSON format with fields like day, subject,time and teacher." +
-                                "and don't give me subject code like BAS 403 etc only give subject name like MATHS and teacher which is like AD and day like Mon case"
+                                "Don't give me subject code like BAS 403 etc only give subject name like MATHS and teacher which is like AD and day like Mon case and don't take exam" +
+                                "Important  **Lab Duration:** Assume that any session explicitly identified as a \"Lab\" (or variations like \"Practical\", \"LAB\") is 2 hours long. If a start time is given for a lab, infer the end time or duration based on this 2-hour rule."
                     ),
                     Part(inline_data = InlineData("image/jpeg", base64Image))
                 )

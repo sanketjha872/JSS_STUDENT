@@ -7,9 +7,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -31,12 +33,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.window.isPopupLayout
 import com.jhainusa.jss_student.GeminiBackend.encodeImageToBase64
 import com.jhainusa.jss_student.GeminiBackend.sendToGemini
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.nio.file.WatchEvent
 
 
 @Composable
@@ -84,38 +90,36 @@ fun DropdownMenuExample(vIewModel: MainVIewModel) {
     }
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false},
-            modifier = Modifier.background(Color.Transparent,RoundedCornerShape(18.dp))
+            onDismissRequest = { expanded = false}
         ) {
-            Column(
-                modifier = Modifier
-                    .background(Color.White, shape = RoundedCornerShape(8.dp))
-            ) {
                 DropdownMenuItem(onClick = {
                     expanded = false
                     launcher.launch("image/*")
-                }) {
+                }
+                ) {
                     Text(
                         text = "Upload",
                         color = Color.Black,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontFamily = plusJak,
                         modifier = Modifier.weight(1f)
                     )
+                    Spacer(modifier = Modifier.width(30.dp))
                     Icon(
                         painter = painterResource(R.drawable.ai_svgrepo_com),
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(17.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 DropdownMenuItem(onClick = {
                     expanded = false
+                    vIewModel.delete()
                 }) {
                     Text(
                         text = "Edit",
                         color = Color.Black,
-                        fontSize = 14.sp,
+                        fontSize = 15.sp,
                         fontFamily = plusJak,
                         modifier = Modifier.weight(1f)
                     )
@@ -123,9 +127,9 @@ fun DropdownMenuExample(vIewModel: MainVIewModel) {
                         painter = painterResource(R.drawable.edit_svgrepo_com),
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(17.dp)
+                        modifier = Modifier.size(20.dp)
                     )
-                }
+
             }
         }
     if (loading) {

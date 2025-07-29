@@ -17,4 +17,9 @@ class MainVIewModel(private val scheduleRepository: ScheduleRepository) : ViewMo
             scheduleRepository.insertSchedule(schedule)
         }
     }
+    fun delete(){
+        viewModelScope.launch(Dispatchers.IO) {
+            scheduleRepository.deleteAll()
+        }
+    }
 }

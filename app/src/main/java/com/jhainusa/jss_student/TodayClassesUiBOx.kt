@@ -1,9 +1,6 @@
 package com.jhainusa.jss_student
 
-import android.graphics.drawable.Icon
-import android.text.Layout
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,16 +18,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.res.fontResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -38,7 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import javax.security.auth.Subject
+import com.jhainusa.jss_student.UserPref.UserPreferences
 
 val plusJak = FontFamily(
         Font(R.font.plus_jakarta)
@@ -48,7 +44,10 @@ val plusJak = FontFamily(
 @Preview
 @Composable
 fun FullPAge(
-){
+    ){
+    val context = LocalContext.current
+    val nameFlow = remember { UserPreferences.getName(context) }
+    val name by nameFlow.collectAsState(initial = "Unknown")
     LazyColumn(
         modifier=  Modifier.fillMaxSize()
             .padding(20.dp),
@@ -56,7 +55,7 @@ fun FullPAge(
         horizontalAlignment = Alignment.Start
         ) {
         item {
-            name("Sanket")
+            name(name)
         }
         item{
             check()
@@ -69,7 +68,7 @@ fun FullPAge(
 
 @Composable
 fun name(
-    name : String
+    name: String
 ){
     Text(
         text = "Nice Streak,\n$name",
@@ -133,6 +132,7 @@ fun classComp(
     color: Color,
     onColorChange : () -> Unit
     ){
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
