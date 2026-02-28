@@ -166,7 +166,7 @@ fun AllScreenNav(viewModel: MainVIewModel,mainNav: NavController){
                 .padding(innerPadding)
         ) {
             composable(BottomNavItem.Home.route
-            ) { FullPAge() }
+            ) { FullPAge(viewModel) }
             composable(BottomNavItem.Graph.route){ TimeTable(viewModel) }
             composable(BottomNavItem.Exams.route){ Papers(mainNav) }
             composable(BottomNavItem.Setting.route,
