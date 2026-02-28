@@ -1,25 +1,30 @@
 package com.jhainusa.jss_student.RoomDatabase
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-class MainVIewModel(private val scheduleRepository: ScheduleRepository) : ViewModel(){
+class MainVIewModel(private val repository: ScheduleRepository) : ViewModel() {
 
-    fun getbyDay(day : String) : LiveData<List<Schedule>>{
-        return scheduleRepository.getSchedule(day)
-    }
+    fun getAll() = repository.getAllSchedules().asLiveData()
 
-    fun insertSchedule(schedule : Schedule){
-        viewModelScope.launch(Dispatchers.IO) {
-            scheduleRepository.insertSchedule(schedule)
+    fun insertSchedule(schedule: Schedule) {
+        viewModelScope.launch {
+            repository.insertSchedule(schedule)
         }
     }
-    fun delete(){
-        viewModelScope.launch(Dispatchers.IO) {
-            scheduleRepository.deleteAll()
+
+    fun getAttendanceForDate(subjectId: Int, date: String): Flow<ClassSchedule?> {
+        return repository.getAttendanceForDate(subjectId, date)
+    }
+
+    fun getAttendanceHistory(subjectId: Int) = repository.getAttendanceHistory(subjectId).asLiveData()
+
+    fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {
+        viewModelScope.launch {
+            repository.updateAttendance(subjectId, date, day, status)
         }
     }
 }

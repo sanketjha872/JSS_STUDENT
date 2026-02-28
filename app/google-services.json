@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "90368964479",
+    "project_id": "jss-student",
+    "storage_bucket": "jss-student.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:90368964479:android:4f157325ef68b097cd4c4a",
+        "android_client_info": {
+          "package_name": "com.jhainusa.jss_student"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3ssJRjUFfZyTlT1vcRaKzYpNBaWHwLsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

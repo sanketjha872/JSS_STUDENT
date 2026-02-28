@@ -2,8 +2,11 @@ package com.jhainusa.jss_student.GeminiBackend
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.os.Build
 import android.util.Base64
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
 import org.json.JSONArray
@@ -47,6 +50,7 @@ fun sendToGemini(apiKey: String, base64Image: String,vIewModel: MainVIewModel, o
     )
 
     GeminiClient.instance.generateContent(apiKey, request).enqueue(object : Callback<GeminiResponse> {
+        @RequiresApi(Build.VERSION_CODES.O)
         override fun onResponse(call: Call<GeminiResponse>, response: Response<GeminiResponse>) {
             if (response.isSuccessful && response.body() != null) {
                 val jsonString =
@@ -60,14 +64,7 @@ fun sendToGemini(apiKey: String, base64Image: String,vIewModel: MainVIewModel, o
                     val time = item.getString("time")
                     val subject = item.getString("subject")
                     val teacher = item.getString("teacher")
-                    vIewModel.insertSchedule(
-                        Schedule(
-                            day =day,
-                            subject = subject,
-                            time = time,
-                            teacher = teacher
-                        )
-                    )
+
 
                     Log.d("Timetable", "Day: $day, Subject: $subject ,time : $time , teacher : $teacher")
                 }

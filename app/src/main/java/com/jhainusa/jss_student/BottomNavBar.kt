@@ -56,7 +56,7 @@ fun btbar(navController: NavController) {
                         modifier = Modifier
                             .size(iconSize)
                             .clip(CircleShape)
-                            .background(if (selected) Color.Black else Color.Transparent),
+                            .background(if (selected) Color(0xFF262626) else Color.Transparent),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(

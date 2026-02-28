@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.UserPref.UserPreferences
+import com.jhainusa.jss_student.ui.theme.black1a
 
 val plusJak = FontFamily(
         Font(R.font.plus_jakarta)
@@ -73,6 +75,7 @@ fun name(
     Text(
         text = "Nice Streak,\n$name",
         fontSize = 30.sp,
+        color = Color(0xFF262626),
         fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
 
     )
@@ -97,6 +100,7 @@ fun tc(){
                 text = "Today classes",
                 fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 fontWeight = FontWeight.Bold,
+                color = black1a,
                 fontSize = 19.sp
             )
             Box(
@@ -190,7 +194,7 @@ fun check(){
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ){
         AttendancePerBox(
             "Total\nAttendance",
@@ -204,7 +208,8 @@ fun check(){
             "Short\nAttendance",
             "55%",
             "High Alert",
-            Color(0XFFdeecec)
+            Color(0XFFdeecec),
+            Modifier.weight(1f)
         )
     }
 }
@@ -220,7 +225,7 @@ fun AttendancePerBox(
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(20.dp))
             .background(bg)
             .padding(start = 24.dp, end = 34.dp,
@@ -230,6 +235,7 @@ fun AttendancePerBox(
             text = title,
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
             fontSize = 16.sp,
+            color = black1a,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(15.dp))

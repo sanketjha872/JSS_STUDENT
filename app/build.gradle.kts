@@ -64,7 +64,7 @@ dependencies {
     implementation("androidx.compose.material:material:1.6.0")
     implementation ("androidx.room:room-runtime:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
-
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0")
     kapt("androidx.room:room-compiler:2.6.1")
     implementation ("androidx.room:room-ktx:2.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -101,6 +101,9 @@ dependencies {
     implementation ("com.airbnb.android:lottie-compose:6.0.0")
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    implementation("androidx.compose.material3:material3:1.2.1")
+
 
 
 
