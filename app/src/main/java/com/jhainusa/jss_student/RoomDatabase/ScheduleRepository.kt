@@ -22,6 +22,14 @@ class ScheduleRepository(
         return classScheduleDao.getAttendanceHistory(subjectId)
     }
 
+    fun getAllAttendanceRecords(): Flow<List<ClassSchedule>> {
+        return classScheduleDao.getAllAttendanceRecords()
+    }
+
+    suspend fun deleteSchedule(schedule: Schedule) {
+        scheduleDao.deleteSubject(schedule)
+    }
+
     suspend fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {
         val existing = classScheduleDao.getScheduleForDateSync(subjectId, date)
         if (existing != null) {

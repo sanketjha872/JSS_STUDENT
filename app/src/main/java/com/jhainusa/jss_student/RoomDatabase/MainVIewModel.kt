@@ -16,11 +16,19 @@ class MainVIewModel(private val repository: ScheduleRepository) : ViewModel() {
         }
     }
 
+    fun deleteSchedule(schedule: Schedule) {
+        viewModelScope.launch {
+            repository.deleteSchedule(schedule)
+        }
+    }
+
     fun getAttendanceForDate(subjectId: Int, date: String): Flow<ClassSchedule?> {
         return repository.getAttendanceForDate(subjectId, date)
     }
 
     fun getAttendanceHistory(subjectId: Int) = repository.getAttendanceHistory(subjectId).asLiveData()
+
+    fun getAllAttendance() = repository.getAllAttendanceRecords().asLiveData()
 
     fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {
         viewModelScope.launch {

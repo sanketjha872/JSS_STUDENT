@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -24,7 +26,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,10 +64,47 @@ fun FullPAge(
     val name by nameFlow.collectAsState(initial = "Unknown")
 
     val subjectsList by viewModel.getAll().observeAsState(emptyList())
+    val allAttendance by viewModel.getAllAttendance().observeAsState(emptyList())
+
+    var showSubjectWiseDialog by remember { mutableStateOf(false) }
 
     val currentDay = remember {
         LocalDate.now().dayOfWeek.name.lowercase()
             .replaceFirstChar { it.uppercase() }.take(3) // "Mon", "Tue", etc.
+    }
+
+    val attendanceData by remember(allAttendance) {
+        derivedStateOf {
+            val totalMarked = allAttendance.size
+            val presentCount = allAttendance.count { it.attendanceStatus == 1 }
+            val percentage = if (totalMarked > 0) (presentCount.toFloat() / totalMarked * 100).toInt() else 0
+            
+            val status = when {
+                totalMarked == 0 -> "No data yet"
+                percentage >= 75 -> "Great job!"
+                percentage >= 60 -> "Getting close"
+                else -> "High Alert"
+            }
+            percentage to status
+        }
+    }
+
+    val subjectWiseAttendance by remember(subjectsList, allAttendance) {
+        derivedStateOf {
+            subjectsList.map { subject ->
+                val subjectRecords = allAttendance.filter { it.subjectOwnerId == subject.subjectId }
+                val totalMarked = subjectRecords.size
+                val presentCount = subjectRecords.count { it.attendanceStatus == 1 }
+                val percentage = if (totalMarked > 0) (presentCount.toFloat() / totalMarked * 100).toInt() else 0
+                SubjectAttendanceData(
+                    subjectName = subject.subject,
+                    percentage = percentage,
+                    totalClasses = totalMarked,
+                    presentClasses = presentCount,
+                    color = Color(subject.color.toULong())
+                )
+            }.sortedByDescending { it.percentage }
+        }
     }
 
     val todayClasses by remember(subjectsList) {
@@ -97,10 +138,23 @@ fun FullPAge(
             GreetingHeader(name)
         }
         item {
-            AttendanceOverview()
+            AttendanceOverview(
+                totalPercentage = "${attendanceData.first}%",
+                status = attendanceData.second,
+                onTotalClick = { showSubjectWiseDialog = true }
+            )
         }
         item {
             TodayClassesSection(todayClasses)
+        }
+    }
+
+    if (showSubjectWiseDialog) {
+        AnimatedDialog(showDialog = showSubjectWiseDialog, onDismiss = { showSubjectWiseDialog = false }) {
+            SubjectWiseAttendanceDialogContent(
+                attendanceList = subjectWiseAttendance,
+                onDismiss = { showSubjectWiseDialog = false }
+            )
         }
     }
 }
@@ -109,6 +163,14 @@ data class TodayClassItem(
     val subject: String,
     val teacher: String,
     val time: String,
+    val color: Color
+)
+
+data class SubjectAttendanceData(
+    val subjectName: String,
+    val percentage: Int,
+    val totalClasses: Int,
+    val presentClasses: Int,
     val color: Color
 )
 
@@ -265,27 +327,29 @@ fun classComp(
     Spacer(modifier = Modifier.height(15.dp))
 }
 
-@Preview
 @Composable
-fun AttendanceOverview() {
+fun AttendanceOverview(
+    totalPercentage: String,
+    status: String,
+    onTotalClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         AttendancePerBox(
             "Total\nAttendance",
-            "74%",
-            "24 days in a row",
-            Color(0XFFf8e9c8),
-            Modifier.weight(1f)
+            totalPercentage,
+            "Overall Score",
+            Color(0XFFF8E9C8), // Light Yellowish
+            Modifier.weight(1f).clickable { onTotalClick() }
         )
 
         AttendancePerBox(
-            "Short\nAttendance",
-            "55%",
-            "High Alert",
-            Color(0XFFdeecec),
+            "Attendance\nStatus",
+            status,
+            "Today's Insight",
+            Color(0XFFDEECEC), // Light Blue/Greenish
             Modifier.weight(1f)
         )
     }
@@ -300,43 +364,131 @@ fun AttendancePerBox(
     modifier: Modifier = Modifier
 ) {
     Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.Start,
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .aspectRatio(0.83f)
+            .clip(RoundedCornerShape(32.dp))
             .background(bg)
-            .padding(
-                start = 24.dp, end = 34.dp,
-                top = 26.dp, bottom = 26.dp
-            )
+            .padding(20.dp),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.Start
     ) {
         Text(
             text = title,
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
             fontSize = 16.sp,
             color = black1a,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            lineHeight = 20.sp
         )
-        Spacer(modifier = Modifier.height(15.dp))
+        
         Text(
             text = per,
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
-            fontSize = 34.sp,
+            fontSize = if (per.length > 8) 22.sp else 42.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(vertical = 2.dp)
+            color = Color.Black
         )
-        Spacer(modifier = Modifier.height(3.dp))
-        Text(
-            text = streak,
-            fontFamily = plusJak,
-            fontSize = 11.sp,
-            color = Color.DarkGray,
+        
+        Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.White)
-                .padding(
-                    horizontal = 6.dp, vertical = 4.dp
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White.copy(alpha = 0.8f))
+                .padding(horizontal = 10.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = streak,
+                fontFamily = plusJak,
+                fontSize = 11.sp,
+                color = Color.DarkGray
+            )
+        }
+    }
+}
+
+@Composable
+fun SubjectWiseAttendanceDialogContent(
+    attendanceList: List<SubjectAttendanceData>,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Text(
+            text = "Subject-wise Attendance",
+            fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+            fontSize = 20.sp,
+            color = Color.Black
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (attendanceList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(100.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No subjects found.",
+                    fontFamily = plusJak,
+                    fontSize = 14.sp,
+                    color = Color.Gray
                 )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.height(400.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(attendanceList) { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(item.color.copy(alpha = 0.3f))
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = item.subjectName,
+                                fontFamily = plusJak,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "${item.presentClasses}/${item.totalClasses} classes attended",
+                                fontFamily = plusJak,
+                                fontSize = 12.sp,
+                                color = Color.DarkGray
+                            )
+                        }
+                        
+                        Text(
+                            text = "${item.percentage}%",
+                            fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 20.sp,
+                            color = if (item.percentage >= 75) Color(0xFF2E7D32) else Color(0xFFC62828)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Close",
+            modifier = Modifier
+                .align(Alignment.End)
+                .clickable { onDismiss() }
+                .padding(8.dp),
+            fontFamily = plusJak,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF262626)
         )
     }
 }

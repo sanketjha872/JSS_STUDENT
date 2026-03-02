@@ -1,7 +1,11 @@
 package com.jhainusa.jss_student
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.os.Build
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -29,11 +33,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -46,12 +53,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -59,17 +68,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jhainusa.jss_student.GeminiBackend.encodeImageToBase64
+import com.jhainusa.jss_student.GeminiBackend.sendToGemini
 import com.jhainusa.jss_student.RoomDatabase.DaySchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
 import com.jhainusa.jss_student.ciaPaperPage.SBar
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun UploadTimeTableScreen(viewModel: MainVIewModel) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val subjectsList by viewModel.getAll().observeAsState(emptyList())
     var searchSubject by remember { mutableStateOf("") }
     var showAddSheet by remember { mutableStateOf(false) }
@@ -77,7 +93,9 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
     
     var selectedSubjectForHistory by remember { mutableStateOf<Schedule?>(null) }
     var showHistoryDialog by remember { mutableStateOf(false) }
-
+    var isEditMode by remember { mutableStateOf(false) }
+    var isAiLoading by remember { mutableStateOf(false) }
+    var scheduleToEdit by remember { mutableStateOf<Schedule?>(null) }
     val globalLazyListState = rememberLazyListState()
 
     var isBottomBarAndFabVisible by remember { mutableStateOf(true) }
@@ -124,7 +142,10 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
                 exit = fadeOut() + scaleOut()
             ) {
                 FloatingActionButton(
-                    onClick = { showAddSheet = true },
+                    onClick = {
+                        scheduleToEdit = null
+                        showAddSheet = true
+                    },
                     containerColor = Color(0xFF262626),
                     shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(16.dp)
@@ -148,12 +169,27 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
             horizontalAlignment = Alignment.Start
         ) {
             Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = "My Subjects",
-                color = Color(0xFF1A1A1A),
-                fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
-                fontSize = 30.sp,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "My Subjects",
+                    color = Color(0xFF1A1A1A),
+                    fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                    fontSize = 30.sp,
+                )
+                Box(
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    DropdownMenuExample(
+                        vIewModel = viewModel,
+                        isEditMode = isEditMode,
+                        onEditModeToggle = { isEditMode = !isEditMode }
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Spring Semester 2025",
@@ -177,9 +213,19 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
                         teacher = sub.teacher,
                         daysSchedule = sub.scheduleday,
                         color = Color(sub.color.toULong()),
+                        isEditMode = isEditMode,
                         onClick = {
-                            selectedSubjectForHistory = sub
-                            showHistoryDialog = true
+                            if (!isEditMode) {
+                                selectedSubjectForHistory = sub
+                                showHistoryDialog = true
+                            }
+                        },
+                        onEditClick = {
+                            scheduleToEdit = sub
+                            showAddSheet = true
+                        },
+                        onDeleteClick = {
+                            viewModel.deleteSchedule(sub)
                         }
                     )
                 }
@@ -188,9 +234,16 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
         }
     }
 
+    if (isAiLoading) {
+        LottieLoader("AI is processing your timetable...", R.raw.handloader)
+    }
+
     if (showAddSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showAddSheet = false },
+            onDismissRequest = { 
+                showAddSheet = false
+                scheduleToEdit = null
+            },
             sheetState = sheetState,
             containerColor = Color.White,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
@@ -203,7 +256,11 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
             ) {
                 AddClassScreen(
                     viewModel = viewModel, 
-                    onDimiss = { showAddSheet = false }
+                    scheduleToEdit = scheduleToEdit,
+                    onDimiss = { 
+                        showAddSheet = false
+                        scheduleToEdit = null
+                    }
                 )
             }
         }
@@ -332,40 +389,75 @@ fun SubjectCard(
     teacher: String,
     color: Color,
     daysSchedule: List<DaySchedule>,
-    onClick: () -> Unit
+    isEditMode: Boolean = false,
+    onClick: () -> Unit,
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(color)
-            .clickable { onClick() }
-            .padding(horizontal = 18.dp, vertical = 20.dp),
-        horizontalAlignment = Alignment.Start,
-    ) {
-        Text(
-            text = subname,
-            fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 17.sp,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = teacher,
-            fontFamily = plusJak,
-            fontSize = 13.sp,
-            color = Color.DarkGray
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        daysSchedule.forEach { schedule ->
-            Text(
-                text = "${schedule.day}\t\t\t${schedule.timing}",
-                fontFamily = plusJak,
-                fontSize = 12.sp,
-                color = Color.DarkGray
-            )
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(color)
+                .clickable { onClick() }
+                .padding(horizontal = 18.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.Start,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = subname,
+                        fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 17.sp,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = teacher,
+                        fontFamily = plusJak,
+                        fontSize = 13.sp,
+                        color = Color.DarkGray
+                    )
+                }
+                
+                if (isEditMode) {
+                    Row {
+                        IconButton(onClick = onEditClick) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Color(0xFF262626),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        IconButton(onClick = onDeleteClick) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = Color.Red,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            daysSchedule.forEach { schedule ->
+                Text(
+                    text = "${schedule.day}\t\t\t${schedule.timing}",
+                    fontFamily = plusJak,
+                    fontSize = 12.sp,
+                    color = Color.DarkGray
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
-        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 

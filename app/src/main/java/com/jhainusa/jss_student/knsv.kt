@@ -131,12 +131,21 @@ fun AnimatedDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AddClassScreen(viewModel: MainVIewModel, onDimiss: () -> Unit) {
+fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, onDimiss: () -> Unit) {
     val jakartaFont = plusJak
 
-    val selectedDays = remember { mutableStateMapOf<String, Pair<String, String>>() }
-    var subject by remember { mutableStateOf("") }
-    var teacher by remember { mutableStateOf("") }
+    val selectedDays = remember { 
+        mutableStateMapOf<String, Pair<String, String>>().apply {
+            scheduleToEdit?.scheduleday?.forEach {
+                val times = it.timing.split(" - ")
+                if (times.size == 2) {
+                    put(it.day, times[0] to times[1])
+                }
+            }
+        }
+    }
+    var subject by remember { mutableStateOf(scheduleToEdit?.subject ?: "") }
+    var teacher by remember { mutableStateOf(scheduleToEdit?.teacher ?: "") }
 
     var showTimePicker by remember { mutableStateOf(false) }
     var currentPickingKey by remember { mutableStateOf<String?>(null) }
@@ -146,11 +155,11 @@ fun AddClassScreen(viewModel: MainVIewModel, onDimiss: () -> Unit) {
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Top // Changed from spacedBy to have more control
+        verticalArrangement = Arrangement.Top 
     ) {
         item {
             Text(
-                text = "Add New Class",
+                text = if (scheduleToEdit == null) "Add New Class" else "Edit Class",
                 fontFamily = jakartaFont,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
@@ -161,7 +170,6 @@ fun AddClassScreen(viewModel: MainVIewModel, onDimiss: () -> Unit) {
 
         item {
             inputBox("Subject Name", subject, onValueChange = { subject = it })
-            // inputBox already has a Spacer(8.dp)
         }
 
         item {
@@ -187,7 +195,7 @@ fun AddClassScreen(viewModel: MainVIewModel, onDimiss: () -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp) // Spacing between cards
+                    .padding(bottom = 12.dp) 
                     .clip(RoundedCornerShape(16.dp))
                     .background(if (isSelected) Color(0xFFF8F8F8) else Color.Transparent)
                     .border(
@@ -288,10 +296,11 @@ fun AddClassScreen(viewModel: MainVIewModel, onDimiss: () -> Unit) {
                     if (subject.isNotBlank()) {
                         viewModel.insertSchedule(
                             Schedule(
+                                subjectId = scheduleToEdit?.subjectId ?: 0,
                                 subject = subject,
                                 teacher = teacher,
                                 scheduleday = schedules,
-                                color = assignColor(subject).value.toLong(),
+                                color = scheduleToEdit?.color ?: assignColor(subject).value.toLong(),
                             )
                         )
                         onDimiss()
@@ -310,14 +319,14 @@ fun AddClassScreen(viewModel: MainVIewModel, onDimiss: () -> Unit) {
                 elevation = ButtonDefaults.elevation(0.dp, 0.dp)
             ) {
                 Text(
-                    text = "Save Class Schedule", 
+                    text = if (scheduleToEdit == null) "Save Class Schedule" else "Update Schedule", 
                     fontFamily = jakartaFont, 
                     color = Color.White, 
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
             }
-            Spacer(modifier = Modifier.height(24.dp)) // Extra space at bottom for better scrolling in bottom sheet
+            Spacer(modifier = Modifier.height(24.dp)) 
         }
     }
 
@@ -325,7 +334,6 @@ fun AddClassScreen(viewModel: MainVIewModel, onDimiss: () -> Unit) {
         val currentPair = selectedDays[currentPickingKey!!]!!
         val initialTimeStr = if (isPickingStartTime) currentPair.first else currentPair.second
         
-        // Simple parsing for initial state
         val hour = try { 
             var h = initialTimeStr.split(":")[0].toInt()
             if (initialTimeStr.contains("PM") && h < 12) h += 12

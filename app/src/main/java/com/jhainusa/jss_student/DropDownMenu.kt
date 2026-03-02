@@ -33,7 +33,11 @@ import kotlinx.coroutines.withContext
 
 
 @Composable
-fun DropdownMenuExample(vIewModel: MainVIewModel) {
+fun DropdownMenuExample(
+    vIewModel: MainVIewModel,
+    isEditMode: Boolean,
+    onEditModeToggle: () -> Unit
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var loading by remember{mutableStateOf(false)}
@@ -49,7 +53,7 @@ fun DropdownMenuExample(vIewModel: MainVIewModel) {
                         encodeImageToBase64(stream!!)
                     }
                     sendToGemini(
-                        apiKey = "AIzaSyCjLHvAfyn_TmcV9oVxAePdJOesrkFtcLQ",
+                        apiKey = "AIzaSyC4fOZLV3qaIWmNjfM5HotQXYFN6g4qzAE",
                         base64,
                         vIewModel
                     ) { response ->
@@ -65,13 +69,17 @@ fun DropdownMenuExample(vIewModel: MainVIewModel) {
     }
     IconButton(
                 onClick = {
-                    expanded = !expanded
+                    if (isEditMode) {
+                        onEditModeToggle()
+                    } else {
+                        expanded = !expanded
+                    }
                 }
             ) {
         Icon(
-            painter = painterResource(R.drawable.upload_square_svgrepo_com),
-            contentDescription = null,
-            tint = Color(0xFF6B7280),
+            painter = painterResource(if (isEditMode) R.drawable.baseline_check_24 else R.drawable.upload_square_svgrepo_com),
+            contentDescription = if (isEditMode) "Done" else "More Options",
+            tint = if (isEditMode) Color(0xFF2E7D32) else Color(0xFF6B7280),
             modifier = Modifier.size(29.dp)
         )
     }
@@ -101,6 +109,7 @@ fun DropdownMenuExample(vIewModel: MainVIewModel) {
                 }
                 DropdownMenuItem(onClick = {
                     expanded = false
+                    onEditModeToggle()
                 }) {
                     Text(
                         text = "Edit",

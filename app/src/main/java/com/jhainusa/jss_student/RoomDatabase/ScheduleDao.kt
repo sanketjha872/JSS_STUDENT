@@ -1,6 +1,7 @@
 package com.jhainusa.jss_student.RoomDatabase
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -23,6 +24,9 @@ interface ScheduleDao {
 
     @Query("UPDATE subject SET totalClasses = totalClasses - 1 WHERE subjectId = :subjectId")
     suspend fun decrementTotal(subjectId: Int)
+
+    @Delete
+    suspend fun deleteSubject(schedule: Schedule)
 
     @Query("DELETE FROM subject")
     suspend fun delete()
@@ -47,4 +51,7 @@ interface ClassScheduleDao {
 
     @Query("SELECT * FROM class_schedule WHERE subjectOwnerId = :subjectId ORDER BY date DESC")
     fun getAttendanceHistory(subjectId: Int): Flow<List<ClassSchedule>>
+
+    @Query("SELECT * FROM class_schedule")
+    fun getAllAttendanceRecords(): Flow<List<ClassSchedule>>
 }

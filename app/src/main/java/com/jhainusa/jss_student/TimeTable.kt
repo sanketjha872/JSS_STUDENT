@@ -8,8 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -46,10 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
-import com.jhainusa.jss_student.RoomDatabase.ScheduleDao
-import com.jhainusa.jss_student.RoomDatabase.ScheduleRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import com.jhainusa.jss_student.RoomDatabase.DaySchedule
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import java.time.LocalDate
@@ -78,13 +78,6 @@ fun TimeTable(vIewModel : MainVIewModel){
                 fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 modifier = Modifier.weight(1f)
             )
-            Box(
-                contentAlignment = Alignment.TopEnd
-            ) {
-                DropdownMenuExample(vIewModel)
-            }
-
-
         }
         Spacer(modifier = Modifier.height(2.dp))
         monthChangeUi(
@@ -183,6 +176,7 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
                     .filter { it.day.startsWith(selectedDayName, ignoreCase = true) }
                     .map { daySchedule -> schedule to daySchedule }
             }
+            .sortedBy { pair -> parseStartTime(pair.second.timing) }
         }
     }
 
@@ -232,7 +226,7 @@ fun ScheduleItemRow(
 ) {
     val presentAction = SwipeAction(
         onSwipe = { onStatusChange(1) },
-        icon = { Icon(painterResource(R.drawable.baseline_check_24), null, tint = Color.White, modifier = Modifier.padding(16.dp).size(24.dp)) },
+        icon = { Icon(painterResource(R.drawable.baseline_check_24), null, tint = Color.White, modifier = Modifier.padding(16.dp)) },
         background = Color(0xFF4CAF50)
     )
     val absentAction = SwipeAction(
@@ -247,30 +241,106 @@ fun ScheduleItemRow(
         else -> Color(schedule.color.toULong())
     }
 
-    SwipeableActionsBox(
-        startActions = listOf(presentAction),
-        endActions = listOf(absentAction),
-        swipeThreshold = 70.dp,
-        backgroundUntilSwipeThreshold = Color.Transparent
+    val times = timing.split("-")
+    val startTime = times.firstOrNull()?.trim() ?: ""
+    val endTime = if (times.size > 1) times[1].trim() else ""
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        // Timing Column on the left
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(backgroundColor)
-                .padding(horizontal = 16.dp, vertical = 20.dp)
+                .width(75.dp)
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.End
         ) {
-            val startTime = timing.split("-").firstOrNull()?.trim() ?: ""
-            Column(modifier = Modifier.width(65.dp)) {
+            Text(
+                text = startTime,
+                color = Color.Gray,
+                fontFamily = plusJak,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = endTime,
+                color = Color.Gray.copy(alpha = 0.6f),
+                fontFamily = plusJak,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Normal
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // Card with Swipe Actions on the right
+        SwipeableActionsBox(
+            startActions = listOf(presentAction),
+            endActions = listOf(absentAction),
+            swipeThreshold = 70.dp,
+            backgroundUntilSwipeThreshold = Color.Transparent,
+            modifier = Modifier.weight(1f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(backgroundColor)
+                    .clickable { onStatusChange(0) }
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Subject Icon Placeholder
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.8f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.baseline_code_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                            tint = Color.Black.copy(alpha = 0.6f)
+                        )
+                    }
+
+                    // Teacher Info
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                        Text(
+                            text = schedule.teacher,
+                            fontFamily = plusJak,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.DarkGray
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Text(
-                    text = startTime,
-                    color = Color.DarkGray,
-                    fontFamily = plusJak,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
+                    text = schedule.subject,
+                    fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color.Black
                 )
+                
                 if (attendanceStatus != 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (attendanceStatus == 1) "PRESENT" else "ABSENT",
                         color = if (attendanceStatus == 1) Color(0xFF2E7D32) else Color(0xFFC62828),
@@ -279,37 +349,6 @@ fun ScheduleItemRow(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = schedule.subject,
-                    fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = Color.Black
-                )
-                Text(
-                    text = schedule.teacher,
-                    fontFamily = plusJak,
-                    fontSize = 13.sp,
-                    color = Color.Gray
-                )
-            }
-            
-            Icon(
-                painter = painterResource(
-                    when(attendanceStatus) {
-                        1 -> R.drawable.baseline_check_24
-                        2 -> R.drawable.cancel_svgrepo_com
-                        else -> R.drawable.baseline_code_24
-                    }
-                ),
-                contentDescription = null,
-                tint = if (attendanceStatus == 0) Color.Gray else Color.Unspecified,
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }
