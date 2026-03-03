@@ -93,7 +93,6 @@ fun TimeTable(vIewModel : MainVIewModel){
             onDateSelected = { selectedDate = it }
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
 
         Box(modifier = Modifier.weight(1f)) {
             ScheduleTimeline(selectedDate, vIewModel)
@@ -255,22 +254,22 @@ fun ScheduleItemRow(
         // Timing Column on the left
         Column(
             modifier = Modifier
-                .width(75.dp)
+                .width(60.dp)
                 .fillMaxHeight()
-                .padding(vertical = 4.dp),
+                .padding(vertical = 15.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.End
         ) {
             Text(
                 text = startTime,
-                color = Color.Gray,
+                color = Color.DarkGray,
                 fontFamily = plusJak,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = endTime,
-                color = Color.Gray.copy(alpha = 0.6f),
+                color = Color.DarkGray.copy(alpha = 0.7f),
                 fontFamily = plusJak,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal

@@ -53,7 +53,7 @@ fun CalendarWithExpandableView(
     var isExpanded by remember { mutableStateOf(false) }
 
     val calendarHeight by animateDpAsState(
-        targetValue = if (isExpanded) 310.dp else 100.dp,
+        targetValue = if (isExpanded) 330.dp else 90.dp,
         animationSpec = tween(durationMillis = 400),
         label = "CalendarHeight"
     )

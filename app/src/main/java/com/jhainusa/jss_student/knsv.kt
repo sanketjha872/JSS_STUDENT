@@ -62,16 +62,16 @@ val SelectedDayColor = PrimaryColor
 val UnselectedDayColor = Color.White
 val OutlineColor = Color(0xFFE0E0E0)
 val colorPalette = listOf(
-    Color(0xFFF8F0FF), // Very light lavender
-    Color(0xFFFFF4F4), // Soft blush pink
-    Color(0xFFFFFBEA), // Cream yellow
-    Color(0xFFEFFFF7), // Soft mint
-    Color(0xFFEFFFFF), // Powder aqua
-    Color(0xFFFFF5EC), // Peach cream
-    Color(0xFFF4FBF8), // Light teal mint
-    Color(0xFFFDF4F9), // Pinkish white
-    Color(0xFFEFF5FF), // Cloud blue
-    Color(0xFFFDFDF5)
+    Color(0xFFEDE2FF), // Darker light lavender
+    Color(0xFFFFE6E6), // Darker soft blush pink
+    Color(0xFFFFF3CC), // Darker cream yellow
+    Color(0xFFDFF7EC), // Darker soft mint
+    Color(0xFFDFF7F7), // Darker powder aqua
+    Color(0xFFFFE8D6), // Darker peach cream
+    Color(0xFFE6F5EF), // Darker light teal mint
+    Color(0xFFFFE6F2), // Darker pinkish white
+    Color(0xFFDCE8FF), // Darker cloud blue
+    Color(0xFFF5F5E6)
 )
 
 fun assignColor(name: String): Color {

@@ -16,7 +16,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -105,37 +104,8 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
             }
         }
     }
-
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        uri?.let {
-            isAiLoading = true
-            scope.launch {
-                try {
-                    val base64 = withContext(Dispatchers.IO) {
-                        val stream = context.contentResolver.openInputStream(it)
-                        encodeImageToBase64(stream!!)
-                    }
-                    sendToGemini(
-                        apiKey = "AIzaSyC4fOZLV3qaIWmNjfM5HotQXYFN6g4qzAE",
-                        base64,
-                        viewModel
-                    ) { success ->
-                        isAiLoading = false
-                        if (success) {
-                            Log.d("AI", "Timetable extracted successfully")
-                        } else {
-                            Log.e("AI", "Failed to extract timetable")
-                        }
-                    }
-                } catch (e: Exception) {
-                    isAiLoading = false
-                    e.printStackTrace()
-                }
-            }
-        }
-    }
-
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp,10.dp,0.dp,0.dp),
         floatingActionButton = {
             AnimatedVisibility(
                 visible = isBottomBarAndFabVisible,
@@ -164,11 +134,11 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
     ) { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize()
-                .padding(horizontal = 20.dp), // Removed padding(paddingValues) to fix nested scaffold top padding
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -229,7 +199,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
                         }
                     )
                 }
-                item { Spacer(modifier = Modifier.height(paddingValues.calculateBottomPadding() + 80.dp)) }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
@@ -471,93 +441,4 @@ fun SubjectCardPreview() {
         daysSchedule = listOf(DaySchedule("Mon", "11:00-12:00")),
         onClick = {}
     )
-}
-
-@Composable
-fun Daylist(
-    selectedDay: String,
-    onDaySelected: (String) -> Unit
-) {
-    val days = arrayOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-    Column {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.Gray)
-                .height(1.dp)
-        )
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            items(days) { item ->
-                val isSelected = selectedDay == item
-                Text(
-                    text = item,
-                    fontFamily = plusJak,
-                    fontSize = 13.5.sp,
-                    modifier = Modifier
-                        .background(if (isSelected) Color.Black else Color.Transparent)
-                        .clickable { onDaySelected(item) }
-                        .padding(horizontal = 14.dp, vertical = 14.dp),
-                    color = if (isSelected) Color.White else Color.Black
-                )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.Gray)
-                .height(1.dp)
-        )
-    }
-}
-
-@Composable
-fun AddTimeSlot() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.Black)
-            .padding(vertical = 14.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = null,
-            tint = Color.White
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = "Add Time Slot",
-            fontSize = 16.sp,
-            fontFamily = plusJak,
-            color = Color.White
-        )
-    }
-}
-
-@Composable
-fun UpperBox() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.fillMaxWidth()
-            .padding(horizontal = 5.dp)
-    ) {
-        Text(
-            text = "Class\nSchedule",
-            fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
-            color = Color(0xFF262626),
-            fontSize = 35.sp
-        )
-        Text(
-            text = "\n\nSave",
-            fontFamily = plusJak,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp
-        )
-    }
 }

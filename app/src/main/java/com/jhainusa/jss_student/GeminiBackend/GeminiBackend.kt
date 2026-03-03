@@ -46,8 +46,9 @@ fun sendToGemini(apiKey: String, base64Image: String, viewModel: MainVIewModel, 
                                 "2. 'subject' should be in short form, NOT the code (e.g., use 'OS' not 'BCS403'). " +
                                 "3. 'teacher' should be the name or initials provided. " +
                                 "4. 'time' should be in format 'HH:MM AM/PM - HH:MM AM/PM'. " +
-                                "5. If it's a LAB, it usually lasts 2 hours and for C1 and C2 lab subject are different. " +
-                                "6. Do NOT include exams or lunch breaks or mentoring or remedial classes . " +
+                                "5. If it's a LAB, it usually lasts 2 hours. " +
+                                "6. Take C1 and C2 as different subjects for lab"  +
+                                "7. Do NOT include exams or lunch breaks or mentoring or remedial classes . " +
                                 "Output ONLY the raw JSON array."
                     ),
                     Part(inline_data = InlineData("image/jpeg", base64Image))

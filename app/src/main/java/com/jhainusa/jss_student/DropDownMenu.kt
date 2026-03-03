@@ -53,9 +53,9 @@ fun DropdownMenuExample(
                         encodeImageToBase64(stream!!)
                     }
                     sendToGemini(
-                        apiKey = "AIzaSyC4fOZLV3qaIWmNjfM5HotQXYFN6g4qzAE",
-                        base64,
-                        vIewModel
+                        apiKey = BuildConfig.GEMINI_API_KEY,
+                        base64Image = base64,
+                        viewModel = vIewModel
                     ) { response ->
                         loading = false
                         Log.d("Gemini", "Response: $response")
@@ -112,16 +112,16 @@ fun DropdownMenuExample(
                     onEditModeToggle()
                 }) {
                     Text(
-                        text = "Edit",
+                        text = if (isEditMode) "Done" else "Edit",
                         color = Color.Black,
                         fontSize = 15.sp,
                         fontFamily = plusJak,
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
-                        painter = painterResource(R.drawable.edit_svgrepo_com),
+                        painter = painterResource(if (isEditMode) R.drawable.baseline_check_24 else R.drawable.edit_svgrepo_com),
                         contentDescription = null,
-                        tint = Color.Black,
+                        tint = if (isEditMode) Color(0xFF2E7D32) else Color.Black,
                         modifier = Modifier.size(20.dp)
                     )
 
