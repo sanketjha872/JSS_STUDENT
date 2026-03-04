@@ -39,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.jhainusa.jss_student.GeminiBackend.encodeImageToBase64
 import com.jhainusa.jss_student.GeminiBackend.sendToGemini
 import com.jhainusa.jss_student.RoomDatabase.DaySchedule
@@ -61,7 +63,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
     var searchSubject by remember { mutableStateOf("") }
     var showAddSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
+
     var selectedSubjectForHistory by remember { mutableStateOf<Schedule?>(null) }
     var showHistoryDialog by remember { mutableStateOf(false) }
     var isEditMode by remember { mutableStateOf(false) }
@@ -74,8 +76,8 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
     var previousFirstVisibleItemScrollOffset by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(globalLazyListState) {
-        snapshotFlow { 
-            globalLazyListState.firstVisibleItemIndex to globalLazyListState.firstVisibleItemScrollOffset 
+        snapshotFlow {
+            globalLazyListState.firstVisibleItemIndex to globalLazyListState.firstVisibleItemScrollOffset
         }.collectLatest { (index, offset) ->
             if (globalLazyListState.isScrollInProgress) {
                 if (index > previousFirstVisibleItemIndex) {
@@ -205,12 +207,17 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
     }
 
     if (isAiLoading) {
-        LottieLoader("AI is processing your timetable...", R.raw.handloader)
+        Dialog(
+            onDismissRequest = { },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            LottieLoader("AI is processing your timetable...", R.raw.handloader)
+        }
     }
 
     if (showAddSheet) {
         ModalBottomSheet(
-            onDismissRequest = { 
+            onDismissRequest = {
                 showAddSheet = false
                 scheduleToEdit = null
             },
@@ -225,9 +232,9 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
                     .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 AddClassScreen(
-                    viewModel = viewModel, 
+                    viewModel = viewModel,
                     scheduleToEdit = scheduleToEdit,
-                    onDimiss = { 
+                    onDimiss = {
                         showAddSheet = false
                         scheduleToEdit = null
                     }
@@ -315,20 +322,20 @@ fun AttendanceHistoryDialog(
                                 color = Color.Gray
                             )
                         }
-                        
+
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    if (record.attendanceStatus == 1) Color(0xFFE8F5E9) 
+                                    if (record.attendanceStatus == 1) Color(0xFFE8F5E9)
                                     else Color(0xFFFFEBEE)
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 text = if (record.attendanceStatus == 1) "Present" else "Absent",
-                                color = if (record.attendanceStatus == 1) Color(0xFF2E7D32) 
-                                        else Color(0xFFC62828),
+                                color = if (record.attendanceStatus == 1) Color(0xFF2E7D32)
+                                else Color(0xFFC62828),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -337,9 +344,9 @@ fun AttendanceHistoryDialog(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "Close",
             modifier = Modifier
@@ -394,7 +401,7 @@ fun SubjectCard(
                         color = Color.DarkGray
                     )
                 }
-                
+
                 if (isEditMode) {
                     Row {
                         IconButton(onClick = onEditClick) {
@@ -416,7 +423,7 @@ fun SubjectCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
             daysSchedule.forEach { schedule ->
                 Text(

@@ -78,7 +78,7 @@ fun FullPAge(
             val totalMarked = allAttendance.size
             val presentCount = allAttendance.count { it.attendanceStatus == 1 }
             val percentage = if (totalMarked > 0) (presentCount.toFloat() / totalMarked * 100).toInt() else 0
-            
+
             val status = when {
                 totalMarked == 0 -> "No data yet"
                 percentage >= 75 -> "Great job!"
@@ -122,8 +122,8 @@ fun FullPAge(
                         )
                     }
             }
-            .filter { parseEndTime(it.time).isAfter(now) } // Only upcoming or ongoing
-            .sortedBy { parseStartTime(it.time) }
+                .filter { parseEndTime(it.time).isAfter(now) } // Only upcoming or ongoing
+                .sortedBy { parseStartTime(it.time) }
         }
     }
 
@@ -380,7 +380,7 @@ fun AttendancePerBox(
             fontWeight = FontWeight.Bold,
             lineHeight = 20.sp
         )
-        
+
         Text(
             text = per,
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
@@ -388,7 +388,7 @@ fun AttendancePerBox(
             fontWeight = FontWeight.SemiBold,
             color = Color.Black
         )
-        
+
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(12.dp))
@@ -465,7 +465,7 @@ fun SubjectWiseAttendanceDialogContent(
                                 color = Color.DarkGray
                             )
                         }
-                        
+
                         Text(
                             text = "${item.percentage}%",
                             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
@@ -479,7 +479,7 @@ fun SubjectWiseAttendanceDialogContent(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "Close",
             modifier = Modifier

@@ -114,8 +114,6 @@ dependencies {
 
     implementation("androidx.compose.material3:material3:1.2.1")
 
-
-
-
-
+    // Glance for App Widgets
+    implementation("androidx.glance:glance-appwidget:1.1.0")
 }

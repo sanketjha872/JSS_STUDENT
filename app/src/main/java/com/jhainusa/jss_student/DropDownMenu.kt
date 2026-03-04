@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.jhainusa.jss_student.GeminiBackend.encodeImageToBase64
 import com.jhainusa.jss_student.GeminiBackend.sendToGemini
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
@@ -128,6 +130,11 @@ fun DropdownMenuExample(
             }
         }
     if (loading) {
-        LottieLoader("Analyzing your image...",R.raw.handloader)
+        Dialog(
+            onDismissRequest = { },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            LottieLoader("Analyzing your image...", R.raw.handloader)
+        }
     }
 }

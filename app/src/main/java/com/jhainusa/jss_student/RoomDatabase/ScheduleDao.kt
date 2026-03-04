@@ -40,6 +40,9 @@ interface ClassScheduleDao {
     @Update
     suspend fun updateSchedule(schedule: ClassSchedule)
 
+    @Query("DELETE FROM class_schedule WHERE subjectOwnerId = :subjectId AND date = :date")
+    suspend fun deleteScheduleForDate(subjectId: Int, date: String)
+
     @Query("SELECT * FROM class_schedule WHERE subjectOwnerId = :subjectId AND date = :date LIMIT 1")
     fun getScheduleForDate(subjectId: Int, date: String): Flow<ClassSchedule?>
 

@@ -32,9 +32,31 @@ class ScheduleRepository(
 
     suspend fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {
         val existing = classScheduleDao.getScheduleForDateSync(subjectId, date)
+
+        if (status == 0) {
+            // Unmarking the class: remove the record completely
+            if (existing != null) {
+                if (existing.attendanceStatus == 1) {
+                    scheduleDao.decrementTotal(subjectId)
+                }
+                classScheduleDao.deleteScheduleForDate(subjectId, date)
+            }
+            return
+        }
+
         if (existing != null) {
+            // Update existing record
+            if (existing.attendanceStatus != 1 && status == 1) {
+                scheduleDao.incrementTotal(subjectId)
+            } else if (existing.attendanceStatus == 1 && status != 1) {
+                scheduleDao.decrementTotal(subjectId)
+            }
             classScheduleDao.updateSchedule(existing.copy(attendanceStatus = status))
         } else {
+            // New record
+            if (status == 1) {
+                scheduleDao.incrementTotal(subjectId)
+            }
             classScheduleDao.insertOrUpdate(
                 ClassSchedule(
                     subjectOwnerId = subjectId,
@@ -43,13 +65,6 @@ class ScheduleRepository(
                     attendanceStatus = status
                 )
             )
-        }
-        
-        // Update total classes count if needed
-        if (status == 1) {
-            scheduleDao.incrementTotal(subjectId)
-        } else if (existing?.attendanceStatus == 1) {
-            scheduleDao.decrementTotal(subjectId)
         }
     }
 }

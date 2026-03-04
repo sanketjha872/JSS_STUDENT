@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -20,7 +19,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +26,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.BufferedInputStream
 import java.io.File
@@ -40,10 +37,12 @@ fun PdfDownloaderAndOpener(pdfUrl: String) {
     val context = LocalContext.current
     var isDownloading by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        isDownloading = true
-        downloadAndOpenPdf(context, pdfUrl)
-        isDownloading = false
+    LaunchedEffect(pdfUrl) {
+        if (pdfUrl.isNotEmpty()) {
+            isDownloading = true
+            downloadAndOpenPdf(context, pdfUrl)
+            isDownloading = false
+        }
     }
 
     if (isDownloading) {
@@ -64,11 +63,14 @@ fun PdfDownloaderAndOpener(pdfUrl: String) {
 suspend fun downloadAndOpenPdf(context: Context, url: String) {
     withContext(Dispatchers.IO) {
         try {
+            // Clean the URL string from potential quotes or whitespace
+            val cleanedUrl = url.trim().removeSurrounding("\"")
+
             val fileName = "downloaded_file.pdf"
             val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
             val file = File(storageDir, fileName)
 
-            val urlConnection = URL(url).openConnection()
+            val urlConnection = URL(cleanedUrl).openConnection()
             val inputStream = BufferedInputStream(urlConnection.getInputStream())
             val outputStream = FileOutputStream(file)
 
@@ -82,28 +84,33 @@ suspend fun downloadAndOpenPdf(context: Context, url: String) {
             inputStream.close()
             outputStream.close()
 
-            openPdfFile(context, file)
+            withContext(Dispatchers.Main) {
+                openPdfFile(context, file)
+            }
         } catch (e: Exception) {
             Log.e("PDF", "Download error: ${e.message}")
         }
     }
 }
+
 fun openPdfFile(context: Context, file: File) {
-    val uri = FileProvider.getUriForFile(
-        context,
-        "${context.packageName}.provider",
-        file
-    )
-
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(uri, "application/pdf")
-        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
-    }
-
     try {
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            file
+        )
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
         context.startActivity(intent)
     } catch (e: ActivityNotFoundException) {
         Toast.makeText(context, "No PDF viewer found", Toast.LENGTH_LONG).show()
+    } catch (e: Exception) {
+        Log.e("PDF", "Error opening PDF: ${e.message}")
+        Toast.makeText(context, "Error opening PDF", Toast.LENGTH_SHORT).show()
     }
 }
-
