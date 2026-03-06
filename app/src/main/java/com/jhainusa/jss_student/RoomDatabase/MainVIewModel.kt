@@ -26,6 +26,8 @@ class MainVIewModel(private val repository: ScheduleRepository) : ViewModel() {
         return repository.getAttendanceForDate(subjectId, date)
     }
 
+    fun getAllSchedulesForDate(date: String) = repository.getAllSchedulesForDate(date).asLiveData()
+
     fun getAttendanceHistory(subjectId: Int) = repository.getAttendanceHistory(subjectId).asLiveData()
 
     fun getAllAttendance() = repository.getAllAttendanceRecords().asLiveData()
@@ -33,6 +35,18 @@ class MainVIewModel(private val repository: ScheduleRepository) : ViewModel() {
     fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {
         viewModelScope.launch {
             repository.updateAttendance(subjectId, date, day, status)
+        }
+    }
+
+    fun addExtraClass(subjectId: Int, date: String, day: String, timing: String) {
+        viewModelScope.launch {
+            repository.addExtraClass(subjectId, date, day, timing)
+        }
+    }
+
+    fun updateExtraClassAttendance(classId: Int, status: Int) {
+        viewModelScope.launch {
+            repository.updateExtraClassAttendance(classId, status)
         }
     }
 }

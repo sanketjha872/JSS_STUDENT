@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberAnimatedNavController()
-            
+
             AnimatedNavHost(navController, startDestination = "userinfo",
                 modifier = Modifier.fillMaxSize(),
                 enterTransition = {

@@ -23,11 +23,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -49,17 +53,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
-import com.jhainusa.jss_student.RoomDatabase.DaySchedule
+import com.jhainusa.jss_student.RoomDatabase.ClassSchedule
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import java.time.LocalDate
 import java.time.YearMonth
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TimeTable(vIewModel : MainVIewModel){
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showExtraClassSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Column(
         modifier=  Modifier.fillMaxSize()
@@ -78,9 +85,21 @@ fun TimeTable(vIewModel : MainVIewModel){
                 fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 modifier = Modifier.weight(1f)
             )
+            IconButton(
+                onClick = { showExtraClassSheet = true },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color(0xFF262626))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Extra Class",
+                    tint = Color.White
+                )
+            }
         }
         Spacer(modifier = Modifier.height(2.dp))
-        monthChangeUi(
+        MonthChangeUi(
             currentMonth = currentMonth,
             onPreviousMonth = {currentMonth = currentMonth.minusMonths(1)},
             onNextMonth = {currentMonth = currentMonth.plusMonths(1)}
@@ -93,16 +112,160 @@ fun TimeTable(vIewModel : MainVIewModel){
             onDateSelected = { selectedDate = it }
         )
 
-
         Box(modifier = Modifier.weight(1f)) {
             ScheduleTimeline(selectedDate, vIewModel)
         }
+    }
+
+    if (showExtraClassSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showExtraClassSheet = false },
+            sheetState = sheetState,
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            AddExtraClassBottomSheet(
+                viewModel = vIewModel,
+                selectedDate = selectedDate,
+                onDismiss = { showExtraClassSheet = false }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun AddExtraClassBottomSheet(
+    viewModel: MainVIewModel,
+    selectedDate: LocalDate,
+    onDismiss: () -> Unit
+) {
+    val subjects by viewModel.getAll().observeAsState(emptyList())
+    var selectedSubject by remember { mutableStateOf<Schedule?>(null) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var startTime by remember { mutableStateOf("09:00 AM") }
+    var endTime by remember { mutableStateOf("10:00 AM") }
+    var isPickingStartTime by remember { mutableStateOf(true) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+    ) {
+        Text(
+            text = "Add Extra Class",
+            fontFamily = plusJak,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryColor
+        )
+        Text(
+            text = "For $selectedDate",
+            fontFamily = plusJak,
+            fontSize = 14.sp,
+            color = Color.Gray
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text("Select Subject", fontFamily = plusJak, fontWeight = FontWeight.Medium, fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        LazyColumn(modifier = Modifier.height(200.dp)) {
+            items(subjects) { subject ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (selectedSubject == subject) PrimaryColor.copy(0.1f) else Color.Transparent)
+                        .border(1.dp, if (selectedSubject == subject) PrimaryColor else OutlineColor, RoundedCornerShape(12.dp))
+                        .clickable { selectedSubject = subject }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier.size(12.dp).clip(CircleShape).background(Color(subject.color.toULong()))
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(text = subject.subject, fontFamily = plusJak, fontSize = 14.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            TimeSelectionBox(
+                label = "Start",
+                time = startTime,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isPickingStartTime = true
+                    showTimePicker = true
+                }
+            )
+            TimeSelectionBox(
+                label = "End",
+                time = endTime,
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isPickingStartTime = false
+                    showTimePicker = true
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        androidx.compose.material.Button(
+            onClick = {
+                selectedSubject?.let { subject ->
+                    viewModel.addExtraClass(
+                        subject.subjectId,
+                        selectedDate.toString(),
+                        selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() },
+                        "$startTime - $endTime"
+                    )
+                    onDismiss()
+                }
+            },
+            enabled = selectedSubject != null,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = androidx.compose.material.ButtonDefaults.buttonColors(backgroundColor = PrimaryColor, contentColor = Color.White)
+        ) {
+            Text("Add Class", fontFamily = plusJak, fontWeight = FontWeight.Bold, color = Color.White)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    if (showTimePicker) {
+        val initialTime = if (isPickingStartTime) startTime else endTime
+        val h = try {
+            var hour = initialTime.split(":")[0].toInt()
+            if (initialTime.contains("PM") && hour < 12) hour += 12
+            if (initialTime.contains("AM") && hour == 12) hour = 0
+            hour
+        } catch (_: Exception) { 9 }
+        val m = try { initialTime.split(":")[1].split(" ")[0].toInt() } catch (_: Exception) { 0 }
+
+        TimePickerDialog(
+            initialHour = h,
+            initialMinute = m,
+            onTimeSelected = { hour, min ->
+                val formatted = formatTime(hour, min)
+                if (isPickingStartTime) startTime = formatted else endTime = formatted
+                showTimePicker = false
+            },
+            onDismiss = { showTimePicker = false }
+        )
     }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun monthChangeUi(
+fun MonthChangeUi(
     currentMonth : YearMonth,
     onPreviousMonth : () -> Unit,
     onNextMonth : () -> Unit
@@ -122,7 +285,7 @@ fun monthChangeUi(
                 onClick = onPreviousMonth
             ) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                     contentDescription = null,
                     tint = Color.Gray,
                     modifier = Modifier
@@ -141,7 +304,7 @@ fun monthChangeUi(
                 onClick = onNextMonth
             ) {
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = Color.Gray,
                     modifier = Modifier
@@ -164,18 +327,32 @@ fun TimeTablePreview() {
 @Composable
 fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
     val schedules by viewModel.getAll().observeAsState(emptyList())
+    val extraClasses by viewModel.getAllSchedulesForDate(selectedDate.toString()).observeAsState(emptyList())
     
     val selectedDayName = selectedDate.dayOfWeek.name.lowercase()
-        .replaceFirstChar { it.uppercase() }.take(3) // "Mon", "Tue", etc.
+        .replaceFirstChar { it.uppercase() }.take(3)
 
-    val filteredSchedules by remember(schedules, selectedDayName) {
+    val combinedList by remember(schedules, extraClasses, selectedDayName) {
         derivedStateOf {
-            schedules.flatMap { schedule ->
+            val regular = schedules.flatMap { schedule ->
                 schedule.scheduleday
                     .filter { it.day.startsWith(selectedDayName, ignoreCase = true) }
-                    .map { daySchedule -> schedule to daySchedule }
+                    .map { daySchedule -> 
+                        TimelineItem.Regular(schedule, daySchedule.timing)
+                    }
             }
-            .sortedBy { pair -> parseStartTime(pair.second.timing) }
+            val extras = extraClasses.filter { it.isExtra }.map { extra ->
+                val parentSubject = schedules.find { it.subjectId == extra.subjectOwnerId }
+                TimelineItem.Extra(extra, parentSubject)
+            }
+            
+            (regular + extras).sortedBy { item ->
+                val t = when(item) {
+                    is TimelineItem.Regular -> item.timing
+                    is TimelineItem.Extra -> item.classSchedule.timing
+                }
+                parseStartTime(t)
+            }
         }
     }
 
@@ -184,35 +361,58 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
             .background(Color.White)
             .padding(horizontal = 20.dp),
     ) {
-        if (filteredSchedules.isEmpty()) {
+        if (combinedList.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
                     Text("No classes today", color = Color.Gray, fontFamily = plusJak)
                 }
             }
         } else {
-            items(filteredSchedules) { (schedule, daySchedule) ->
-                val dateStr = selectedDate.toString()
-                val attendance by viewModel.getAttendanceForDate(schedule.subjectId, dateStr)
-                    .collectAsState(initial = null)
-                
-                ScheduleItemRow(
-                    schedule = schedule, 
-                    timing = daySchedule.timing,
-                    attendanceStatus = attendance?.attendanceStatus ?: 0,
-                    onStatusChange = { newStatus ->
-                        viewModel.updateAttendance(
-                            schedule.subjectId, 
-                            dateStr, 
-                            daySchedule.day, 
-                            newStatus
+            items(combinedList) { item ->
+                when(item) {
+                    is TimelineItem.Regular -> {
+                        val dateStr = selectedDate.toString()
+                        val attendance by viewModel.getAttendanceForDate(item.schedule.subjectId, dateStr)
+                            .collectAsState(initial = null)
+                        
+                        ScheduleItemRow(
+                            schedule = item.schedule, 
+                            timing = item.timing,
+                            attendanceStatus = attendance?.attendanceStatus ?: 0,
+                            isExtra = false,
+                            onStatusChange = { newStatus ->
+                                viewModel.updateAttendance(
+                                    item.schedule.subjectId, 
+                                    dateStr, 
+                                    selectedDayName, 
+                                    newStatus
+                                )
+                            }
                         )
                     }
-                )
+                    is TimelineItem.Extra -> {
+                        if (item.parentSubject != null) {
+                            ScheduleItemRow(
+                                schedule = item.parentSubject,
+                                timing = item.classSchedule.timing,
+                                attendanceStatus = item.classSchedule.attendanceStatus,
+                                isExtra = true,
+                                onStatusChange = { newStatus ->
+                                    viewModel.updateExtraClassAttendance(item.classSchedule.classId, newStatus)
+                                }
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
+}
+
+sealed class TimelineItem {
+    data class Regular(val schedule: Schedule, val timing: String) : TimelineItem()
+    data class Extra(val classSchedule: ClassSchedule, val parentSubject: Schedule?) : TimelineItem()
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -221,6 +421,7 @@ fun ScheduleItemRow(
     schedule: Schedule, 
     timing: String,
     attendanceStatus: Int,
+    isExtra: Boolean = false,
     onStatusChange: (Int) -> Unit
 ) {
     val presentAction = SwipeAction(
@@ -235,8 +436,8 @@ fun ScheduleItemRow(
     )
 
     val backgroundColor = when (attendanceStatus) {
-        1 -> Color(0xFFE8F5E9) // Light green for Present
-        2 -> Color(0xFFFFEBEE) // Light red for Absent
+        1 -> Color(0xFFE8F5E9)
+        2 -> Color(0xFFFFEBEE)
         else -> Color(schedule.color.toULong())
     }
 
@@ -251,7 +452,6 @@ fun ScheduleItemRow(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Timing Column on the left
         Column(
             modifier = Modifier
                 .width(60.dp)
@@ -278,7 +478,6 @@ fun ScheduleItemRow(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Card with Swipe Actions on the right
         SwipeableActionsBox(
             startActions = listOf(presentAction),
             endActions = listOf(absentAction),
@@ -299,7 +498,6 @@ fun ScheduleItemRow(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Subject Icon Placeholder
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -315,9 +513,18 @@ fun ScheduleItemRow(
                         )
                     }
 
-                    // Teacher Info
                     Row(verticalAlignment = Alignment.CenterVertically) {
-
+                        if (isExtra) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.Black)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text("EXTRA", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                         Text(
                             text = schedule.teacher,
                             fontFamily = plusJak,

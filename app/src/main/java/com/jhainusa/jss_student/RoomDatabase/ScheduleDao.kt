@@ -57,4 +57,7 @@ interface ClassScheduleDao {
 
     @Query("SELECT * FROM class_schedule")
     fun getAllAttendanceRecords(): Flow<List<ClassSchedule>>
+
+    @Query("SELECT * FROM class_schedule WHERE classId = :classId")
+    suspend fun getClassById(classId: Int): ClassSchedule?
 }
