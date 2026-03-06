@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
 import android.util.Log
+import android.widget.Toast
 import com.jhainusa.jss_student.RoomDatabase.DaySchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
@@ -32,15 +33,11 @@ fun sendImageToSupabase(
     val requestBody = bytes.toRequestBody("image/jpeg".toMediaType())
     val imagePart = MultipartBody.Part.createFormData("image", "timetable.jpg", requestBody)
 
-    // Call using the updated String parameter
     SupabaseClient.api.sendTimetable(userIdStr, imagePart).enqueue(object : Callback<String> {
         override fun onResponse(call: Call<String>, response: Response<String>) {
             if (response.isSuccessful && response.body() != null) {
                 try {
-                    val body = response.body()!!
-                    Log.d("Supabase", "Response: $body")
-                    
-                    val jsonArray = JSONArray(body)
+                    val jsonArray = JSONArray(response.body())
                     val subjectsMap = mutableMapOf<String, MutableList<DaySchedule>>()
                     val teachersMap = mutableMapOf<String, String>()
 
@@ -70,17 +67,18 @@ fun sendImageToSupabase(
                     }
                     onResult(true)
                 } catch (e: Exception) {
-                    Log.e("Supabase", "Parsing error", e)
                     onResult(false)
                 }
+            } else if (response.code() == 429) {
+                // Handle the 3-request limit reached
+                Toast.makeText(context, "Daily limit reached (3 request per day).Try next day", Toast.LENGTH_LONG).show()
+                onResult(false)
             } else {
-                Log.e("Supabase", "Error: ${response.code()} ${response.errorBody()?.string()}")
                 onResult(false)
             }
         }
 
         override fun onFailure(call: Call<String>, t: Throwable) {
-            Log.e("Supabase", "Network failure", t)
             onResult(false)
         }
     })
