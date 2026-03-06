@@ -17,6 +17,15 @@ object UserPreferences {
     suspend fun saveName(context: Context, name: String) {
         context.dataStore.edit { prefs ->
             prefs[NAME_KEY] = name
+            
+            // Prepend name to the existing UUID or generate a new one
+            val currentId = prefs[USER_ID_KEY]
+            val uuid = if (currentId != null && currentId.contains("_")) {
+                currentId.substringAfter("_")
+            } else {
+                UUID.randomUUID().toString()
+            }
+            prefs[USER_ID_KEY] = "${name}_$uuid"
         }
     }
 
@@ -32,7 +41,8 @@ object UserPreferences {
         return if (existingId != null) {
             existingId
         } else {
-            val newId = UUID.randomUUID().toString()
+            val name = prefs[NAME_KEY] ?: "Unknown"
+            val newId = "${name}_${UUID.randomUUID()}"
             context.dataStore.edit { settings ->
                 settings[USER_ID_KEY] = newId
             }

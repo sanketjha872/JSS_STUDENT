@@ -39,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
@@ -85,7 +84,15 @@ fun FullPAge(
                 percentage >= 60 -> "Getting close"
                 else -> "High Alert"
             }
-            percentage to status
+
+            val greeting = when {
+                totalMarked == 0 -> "Welcome,"
+                percentage >= 90 -> "You're a Star,"
+                percentage >= 75 -> "Nice Streak,"
+                percentage >= 60 -> "Keep it up,"
+                else -> "Stay Focused,"
+            }
+            Triple(percentage, status, greeting)
         }
     }
 
@@ -128,24 +135,28 @@ fun FullPAge(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.Start
     ) {
         item {
-            GreetingHeader(name)
+            Column(modifier = Modifier.padding(horizontal = 20.dp).padding(top = 20.dp)) {
+                GreetingHeader(attendanceData.third, name)
+            }
         }
         item {
-            AttendanceOverview(
-                totalPercentage = "${attendanceData.first}%",
-                status = attendanceData.second,
-                onTotalClick = { showSubjectWiseDialog = true }
-            )
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                AttendanceOverview(
+                    totalPercentage = "${attendanceData.first}%",
+                    status = attendanceData.second,
+                    onTotalClick = { showSubjectWiseDialog = true }
+                )
+            }
         }
         item {
-            TodayClassesSection(todayClasses)
+            Column(modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 20.dp)) {
+                TodayClassesSection(todayClasses)
+            }
         }
     }
 
@@ -198,10 +209,11 @@ fun parseEndTime(timeRange: String): LocalTime {
 
 @Composable
 fun GreetingHeader(
+    greeting: String,
     name: String
 ) {
     Text(
-        text = "Nice Streak,\n$name",
+        text = "$greeting\n$name",
         fontSize = 30.sp,
         color = Color(0xFF262626),
         fontFamily = FontFamily(Font(R.font.plusjakartasansbold))

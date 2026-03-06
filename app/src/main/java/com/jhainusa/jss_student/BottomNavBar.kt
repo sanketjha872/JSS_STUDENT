@@ -88,7 +88,7 @@ sealed class BottomNavItem(
     @DrawableRes val icon: Int
 ) {
     object Home : BottomNavItem("home", R.drawable.icons8_home_48)
-    object Graph : BottomNavItem("Graph", R.drawable.chart_square_svgrepo_com)
-    object Exams : BottomNavItem("Exams", R.drawable.calendar_svgrepo_com)
+    object Graph : BottomNavItem("Graph", R.drawable.calendar_svgrepo_com)
+    object Exams : BottomNavItem("Exams", R.drawable.chart_square_svgrepo_com)
     object Setting : BottomNavItem("Setting", R.drawable.setting_2_svgrepo_com)
 }

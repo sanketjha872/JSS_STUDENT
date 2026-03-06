@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -57,77 +58,82 @@ fun UserInfoScreen(
     }
 }
 
-    @Composable
-    fun NameInputScreen(onContinue: (String) -> Unit) {
-        var nameInput by remember { mutableStateOf("") }
+@Composable
+fun NameInputScreen(onContinue: (String) -> Unit) {
+    var nameInput by remember { mutableStateOf("") }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp)
-                .imePadding(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp)
+            .imePadding(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
 
         ) {
-            item {
-                Text(
-                    text = "Hello there!",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+        item {
+            Text(
+                text = "Hello there!",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
+            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "What should we call you?",
-                    fontSize = 16.sp,
-                    color = Color.Gray,
-                    fontFamily = plusJak
-                )
+            Text(
+                text = "What should we call you?",
+                fontSize = 16.sp,
+                color = Color.Gray,
+                fontFamily = plusJak
+            )
 
-                Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-                TextField(
-                    value = nameInput,
-                    onValueChange = { nameInput = it },
-                    placeholder = {
-                        Text(
-                            "Enter your name",
-                            fontFamily = plusJak
-                        )
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0x52E5E5E5), RoundedCornerShape(12.dp)),
-                    colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = Color(0x74E5E5E5),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
+            TextField(
+                value = nameInput,
+                onValueChange = { nameInput = it },
+                placeholder = {
+                    Text(
+                        "Enter your name",
+                        fontFamily = plusJak
                     )
+                },
+                textStyle = TextStyle(
+                    fontFamily = plusJak,
+                    fontSize = 16.sp,
+                ),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0x52E5E5E5), RoundedCornerShape(12.dp)),
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = Color(0x74E5E5E5),
+                    cursorColor = Color.Black,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
                 )
+            )
 
-                Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-                Button(
-                    onClick = {
-                        onContinue(nameInput)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color(0xFF2E2E2E), // Dark button
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Text("Continue", fontSize = 16.sp, fontFamily = plusJak)
-                }
+            Button(
+                onClick = {
+                    onContinue(nameInput)
+                },
+                enabled = nameInput.isNotBlank(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFF2E2E2E), // Dark button
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Continue", fontSize = 16.sp, fontFamily = plusJak)
             }
         }
     }
-
+}
