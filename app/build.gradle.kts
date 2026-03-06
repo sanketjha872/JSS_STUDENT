@@ -116,4 +116,5 @@ dependencies {
 
     // Glance for App Widgets
     implementation("androidx.glance:glance-appwidget:1.1.0")
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 }

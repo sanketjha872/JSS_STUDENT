@@ -41,8 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.jhainusa.jss_student.GeminiBackend.encodeImageToBase64
-import com.jhainusa.jss_student.GeminiBackend.sendToGemini
 import com.jhainusa.jss_student.RoomDatabase.DaySchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule

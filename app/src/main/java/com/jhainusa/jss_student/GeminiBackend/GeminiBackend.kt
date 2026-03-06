@@ -1,75 +1,46 @@
 package com.jhainusa.jss_student.GeminiBackend
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Build
+import android.net.Uri
 import android.util.Base64
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.jhainusa.jss_student.RoomDatabase.DaySchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
 import com.jhainusa.jss_student.assignColor
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
 
+fun sendImageToSupabase(
+    context: Context,
+    uri: Uri,
+    userIdStr: String,
+    viewModel: MainVIewModel,
+    onResult: (Boolean) -> Unit
+) {
+    val inputStream = context.contentResolver.openInputStream(uri) ?: return onResult(false)
+    val bytes = inputStream.readBytes()
 
-fun encodeImageToBase64(inputStream: InputStream): String {
-    val bitmap = BitmapFactory.decodeStream(inputStream)
+    val requestBody = bytes.toRequestBody("image/jpeg".toMediaType())
+    val imagePart = MultipartBody.Part.createFormData("image", "timetable.jpg", requestBody)
 
-    // Resize if width > 800
-    val resizedBitmap = if (bitmap.width > 800) {
-        val aspectRatio = bitmap.height.toDouble() / bitmap.width
-        Bitmap.createScaledBitmap(bitmap, 800, (800 * aspectRatio).toInt(), true)
-    } else bitmap
-
-    val outputStream = ByteArrayOutputStream()
-    resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 40, outputStream) // Compress more (40%)
-
-    return Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
-}
-
-
-fun sendToGemini(apiKey: String, base64Image: String, viewModel: MainVIewModel, onResult: (Boolean) -> Unit) {
-    val request = GeminiRequest(
-        contents = listOf(
-            Content(
-                parts = listOf(
-                    Part(
-                        text = "Extract this timetable into JSON format as a list of objects. Each object MUST have: 'day', 'subject', 'time', and 'teacher'. " +
-                                "Rules: " +
-                                "1. 'day' should be short (Mon, Tue, Wed, Thu, Fri, Sat). " +
-                                "2. 'subject' should be in short form, NOT the code (e.g., use 'OS' not 'BCS403'). " +
-                                "3. 'teacher' should be the name or initials provided. " +
-                                "4. 'time' should be in format 'HH:MM AM/PM - HH:MM AM/PM'. " +
-                                "5. If it's a LAB, it usually lasts 2 hours. " +
-                                "6. Take C1 and C2 as different subjects for lab"  +
-                                "7. Do NOT include exams or lunch breaks or mentoring or remedial classes . " +
-                                "Output ONLY the raw JSON array."
-                    ),
-                    Part(inline_data = InlineData("image/jpeg", base64Image))
-                )
-            )
-        )
-    )
-
-    GeminiClient.instance.generateContent(apiKey, request).enqueue(object : Callback<GeminiResponse> {
-        @RequiresApi(Build.VERSION_CODES.O)
-        override fun onResponse(call: Call<GeminiResponse>, response: Response<GeminiResponse>) {
+    // Call using the updated String parameter
+    SupabaseClient.api.sendTimetable(userIdStr, imagePart).enqueue(object : Callback<String> {
+        override fun onResponse(call: Call<String>, response: Response<String>) {
             if (response.isSuccessful && response.body() != null) {
                 try {
-                    val jsonString = response.body()!!.candidates[0].content.parts[0].text
-                        .replace("```json", "")
-                        .replace("```", "")
-                        .trim()
+                    val body = response.body()!!
+                    Log.d("Supabase", "Response: $body")
                     
-                    val jsonArray = JSONArray(jsonString)
-                    
-                    // Group by subject and teacher to combine different days/times
+                    val jsonArray = JSONArray(body)
                     val subjectsMap = mutableMapOf<String, MutableList<DaySchedule>>()
                     val teachersMap = mutableMapOf<String, String>()
 
@@ -77,8 +48,8 @@ fun sendToGemini(apiKey: String, base64Image: String, viewModel: MainVIewModel, 
                         val item = jsonArray.getJSONObject(i)
                         val day = item.getString("day")
                         val time = item.getString("time")
-                        val subject = item.getString("subject").uppercase().trim()
-                        val teacher = item.optString("teacher", "Unknown")
+                        val subject = item.getString("subject")
+                        val teacher = item.optString("teacher", "")
 
                         if (!subjectsMap.containsKey(subject)) {
                             subjectsMap[subject] = mutableListOf()
@@ -87,28 +58,29 @@ fun sendToGemini(apiKey: String, base64Image: String, viewModel: MainVIewModel, 
                         subjectsMap[subject]?.add(DaySchedule(day, time))
                     }
 
-                    // Insert grouped schedules into database
-                    subjectsMap.forEach { (subjectName, schedules) ->
+                    subjectsMap.forEach { (name, schedules) ->
                         viewModel.insertSchedule(
                             Schedule(
-                                subject = subjectName,
-                                teacher = teachersMap[subjectName] ?: "Unknown",
+                                subject = name,
+                                teacher = teachersMap[name] ?: "",
                                 scheduleday = schedules,
-                                color = assignColor(subjectName).value.toLong()
+                                color = assignColor(name).value.toLong()
                             )
                         )
                     }
                     onResult(true)
                 } catch (e: Exception) {
-                    Log.e("Gemini", "Error parsing JSON: ${e.message}")
+                    Log.e("Supabase", "Parsing error", e)
                     onResult(false)
                 }
             } else {
+                Log.e("Supabase", "Error: ${response.code()} ${response.errorBody()?.string()}")
                 onResult(false)
             }
         }
 
-        override fun onFailure(call: Call<GeminiResponse>, t: Throwable) {
+        override fun onFailure(call: Call<String>, t: Throwable) {
+            Log.e("Supabase", "Network failure", t)
             onResult(false)
         }
     })

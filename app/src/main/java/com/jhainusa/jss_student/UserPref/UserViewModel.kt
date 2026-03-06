@@ -14,11 +14,18 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
     private val _nameFlow = MutableStateFlow<String?>(null)
     val nameFlow: StateFlow<String?> = _nameFlow.asStateFlow()
 
+    private val _userIdFlow = MutableStateFlow<String?>(null)
+    val userIdFlow: StateFlow<String?> = _userIdFlow.asStateFlow()
+
     init {
         viewModelScope.launch {
             UserPreferences.getName(context).collect {
                 _nameFlow.value = it
             }
+        }
+        viewModelScope.launch {
+            val id = UserPreferences.getOrCreateUserId(context)
+            _userIdFlow.value = id
         }
     }
 
