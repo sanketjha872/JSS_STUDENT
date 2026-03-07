@@ -12,9 +12,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/chatgpt_image_jul_28__2025__02_56_35_am"
+        android:icon="@drawable/ll"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/chatgpt_image_jul_28__2025__02_56_35_am"
+        android:roundIcon="@drawable/ll"
         android:supportsRtl="true"
         android:theme="@style/Theme.JSS_STUDENT"
         tools:targetApi="31">

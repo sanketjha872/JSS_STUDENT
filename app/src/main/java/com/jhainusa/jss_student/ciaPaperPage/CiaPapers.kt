@@ -165,7 +165,8 @@ fun SBar(
         onValueChange = onQueryChange,
         placeholder = { Text(placeholder, fontFamily = plusJak, fontWeight = FontWeight.W500) },
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = "Search Icon")
+            Icon(painterResource(R.drawable.search), contentDescription = "Search Icon",
+                modifier = Modifier.size(20.dp))
         },
         singleLine = true,
         shape = RoundedCornerShape(16.dp),

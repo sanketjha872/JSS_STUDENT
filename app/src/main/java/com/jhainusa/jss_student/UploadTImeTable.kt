@@ -162,7 +162,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "Spring Semester 2025",
+                text = "College Semester 2026",
                 color = Color(0xFF6B7280),
                 fontFamily = FontFamily(Font(R.font.plusjakartasansregular)),
                 fontSize = 18.sp,
@@ -199,7 +199,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
                         }
                     )
                 }
-                item { Spacer(modifier = Modifier.height(80.dp)) }
+                item { Spacer(modifier = Modifier.height(20.dp)) }
             }
         }
     }
@@ -404,7 +404,7 @@ fun SubjectCard(
                     Row {
                         IconButton(onClick = onEditClick) {
                             Icon(
-                                imageVector = Icons.Default.Edit,
+                                painter = painterResource(R.drawable.edit_svgrepo_com),
                                 contentDescription = "Edit",
                                 tint = Color(0xFF262626),
                                 modifier = Modifier.size(20.dp)
@@ -412,7 +412,7 @@ fun SubjectCard(
                         }
                         IconButton(onClick = onDeleteClick) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                painter = painterResource(R.drawable.delete),
                                 contentDescription = "Delete",
                                 tint = Color.Red,
                                 modifier = Modifier.size(20.dp)

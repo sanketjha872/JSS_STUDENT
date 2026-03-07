@@ -94,7 +94,7 @@ fun TimeTable(vIewModel : MainVIewModel){
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Extra Class",
-                    tint = Color.White
+                    tint = Color.White,
                 )
             }
         }

@@ -70,7 +70,7 @@ fun DropdownMenuExample(
         }
     ) {
         Icon(
-            painter = painterResource(if (isEditMode) R.drawable.baseline_check_24 else R.drawable.upload_square_svgrepo_com),
+            painter = painterResource(if (isEditMode) R.drawable.check else R.drawable.upload_square_svgrepo_com),
             contentDescription = if (isEditMode) "Done" else "More Options",
             tint = if (isEditMode) Color(0xFF2E7D32) else Color(0xFF6B7280),
             modifier = Modifier.size(29.dp)

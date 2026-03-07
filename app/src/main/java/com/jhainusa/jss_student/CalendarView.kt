@@ -2,7 +2,9 @@ package com.jhainusa.jss_student
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,7 +56,10 @@ fun CalendarWithExpandableView(
 
     val calendarHeight by animateDpAsState(
         targetValue = if (isExpanded) 330.dp else 90.dp,
-        animationSpec = tween(durationMillis = 400),
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "CalendarHeight"
     )
 
