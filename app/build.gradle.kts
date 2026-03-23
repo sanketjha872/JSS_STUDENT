@@ -114,6 +114,10 @@ dependencies {
 
     implementation("androidx.compose.material3:material3:1.2.1")
 
+        // Add the Firebase Cloud Messaging dependency
+        implementation("com.google.firebase:firebase-messaging:24.0.0")
+
+
     // Glance for App Widgets
     implementation("androidx.glance:glance-appwidget:1.1.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
