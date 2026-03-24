@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt")
     alias(libs.plugins.google.gms.google.services)
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -116,6 +117,10 @@ dependencies {
 
         // Add the Firebase Cloud Messaging dependency
         implementation("com.google.firebase:firebase-messaging:24.0.0")
+
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.5.0")
+    implementation("io.ktor:ktor-client-android:2.3.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
 
     // Glance for App Widgets

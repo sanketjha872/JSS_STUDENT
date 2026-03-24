@@ -3,6 +3,7 @@ package com.jhainusa.jss_student.UserPref
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +33,11 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
     fun saveName(name: String) {
         viewModelScope.launch {
             UserPreferences.saveName(context, name)
+            try {
+                supabase.from("users").insert(UserProfile(name = name))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }
