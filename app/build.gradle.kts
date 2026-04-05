@@ -126,4 +126,6 @@ dependencies {
     // Glance for App Widgets
     implementation("androidx.glance:glance-appwidget:1.1.0")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+
+    implementation("com.google.accompanist:accompanist-placeholder-material:0.34.0")
 }

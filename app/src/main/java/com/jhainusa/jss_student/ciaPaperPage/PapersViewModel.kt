@@ -12,16 +12,22 @@ class PapersViewModel : ViewModel() {
     private val _years = MutableStateFlow<List<String>>(emptyList())
     val years : StateFlow<List<String>> = _years
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading = _isLoading
+
     fun loadyears(){
+        _isLoading.value = true
         Firebase.firestore
             .collection("papers")
             .get()
             .addOnSuccessListener { snapshots ->
                 val yearIds = snapshots.documents.map { it.id }
                 _years.value = yearIds
+                _isLoading.value = false
             }
             .addOnFailureListener {
                 Log.e("PapersViewModel","Failed to load years", it)
+                _isLoading.value = false
             }
     }
 

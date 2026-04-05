@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -36,12 +37,16 @@ import com.jhainusa.jss_student.RoomDatabase.ScheduleDatabase
 import com.jhainusa.jss_student.RoomDatabase.ScheduleRepository
 import com.jhainusa.jss_student.UserPref.NameInputScreen
 import com.jhainusa.jss_student.UserPref.UserInfoScreen
+import com.jhainusa.jss_student.UserPref.UserPreferences
+import com.jhainusa.jss_student.UserPref.UserSession
 import com.jhainusa.jss_student.ciaPaperPage.InternalsListScreen
 import com.jhainusa.jss_student.ciaPaperPage.PaperListScreen
 import com.jhainusa.jss_student.ciaPaperPage.Papers
 import com.jhainusa.jss_student.ciaPaperPage.Routes
 import com.jhainusa.jss_student.ciaPaperPage.SemesterListScreen
 import com.jhainusa.jss_student.onboarding.OnboardingScreen
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     lateinit var viewModel: MainVIewModel
@@ -50,6 +55,7 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 
         enableEdgeToEdge()
 
@@ -61,6 +67,11 @@ class MainActivity : ComponentActivity() {
             this,
             MainViewModelFactory(repository)
         ).get(MainVIewModel::class.java)
+
+        lifecycleScope.launch {
+            UserSession.name = UserPreferences
+                .getName(this@MainActivity)
+                .first()
 
         setContent {
             val context = LocalContext.current
@@ -92,7 +103,11 @@ class MainActivity : ComponentActivity() {
             }
             val navController = rememberAnimatedNavController()
 
-            AnimatedNavHost(navController, startDestination = "userinfo",
+            AnimatedNavHost(navController,
+                startDestination = if (UserSession.name.isNullOrEmpty())
+                    "name_input"
+                else
+                    "AllScreenNav",
                 modifier = Modifier.fillMaxSize(),
                 enterTransition = {
                     slideIntoContainer(
@@ -106,9 +121,6 @@ class MainActivity : ComponentActivity() {
                         animationSpec = tween(300)
                     )
                 }){
-                composable("userinfo"){
-                    UserInfoScreen(navController = navController)
-                }
                 composable("name_input") { NameInputScreen(navController=navController) }
 
                 composable("onboarding"){
@@ -171,6 +183,7 @@ class MainActivity : ComponentActivity() {
                     PaperListScreen(yearId,semesterId,paperId)
                 }
             }
+        }
         }
     }
 }

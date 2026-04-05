@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.jhainusa.jss_student.R
+import com.jhainusa.jss_student.SkeletonYearItem
 import com.jhainusa.jss_student.plusJak
 import com.jhainusa.jss_student.ui.theme.black1a
 
@@ -66,6 +67,8 @@ import com.jhainusa.jss_student.ui.theme.black1a
 fun Papers(navController: NavController) {
     val viewModel: PapersViewModel = viewModel()
     val list by viewModel.years.collectAsState()
+
+    val isLoading by viewModel.isLoading.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.loadyears()
@@ -81,11 +84,18 @@ fun Papers(navController: NavController) {
                 CollapsingHeader(scrollState)
             }
 
+            if (isLoading) {
+                items(5) {
+                    SkeletonYearItem()
+                }
+            }
+            else{
             items(list) { yearId ->
                 Years(year = yearId) {
                     navController.navigate("semesters/$yearId")
                 }
             }
+                }
         }
 }
 

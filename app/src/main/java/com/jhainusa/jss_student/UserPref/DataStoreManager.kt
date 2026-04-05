@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 
+object UserSession {
+    var name: String? = null
+}
 object UserPreferences {
     private val Context.dataStore by preferencesDataStore("user_prefs")
     private val NAME_KEY = stringPreferencesKey("user_name")

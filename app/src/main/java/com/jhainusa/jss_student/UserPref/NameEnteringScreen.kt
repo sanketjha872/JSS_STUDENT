@@ -41,23 +41,6 @@ import com.jhainusa.jss_student.plusJak
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-
-@Composable
-fun UserInfoScreen(
-    navController: NavController,
-) {
-    val scope = rememberCoroutineScope()
-
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        val name = UserPreferences.getName(context).first()
-        val destination = if(name.isNullOrEmpty())"name_input" else "AllScreenNav"
-        navController.navigate(destination){
-            popUpTo(0)
-        }
-    }
-}
-
 @Composable
 fun NameInputScreen(viewModel: NameViewModel = viewModel(),
                     navController: NavController) {
