@@ -29,9 +29,9 @@ object UserPreferences {
         }
     }
 
-    fun getName(context: Context): Flow<String> {
+    fun getName(context: Context): Flow<String?> {
         return context.dataStore.data
-            .map { prefs -> prefs[NAME_KEY] ?: "Unknown" }
+            .map { prefs -> prefs[NAME_KEY]}
     }
 
     suspend fun getOrCreateUserId(context: Context): String {

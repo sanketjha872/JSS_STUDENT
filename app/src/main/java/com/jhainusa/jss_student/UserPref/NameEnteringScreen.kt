@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -38,33 +39,28 @@ import androidx.navigation.NavController
 import com.jhainusa.jss_student.R
 import com.jhainusa.jss_student.plusJak
 import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
 fun UserInfoScreen(
     navController: NavController,
-    viewModel: NameViewModel = viewModel()
 ) {
     val scope = rememberCoroutineScope()
-    val name by viewModel.nameFlow.collectAsState()
 
-    LaunchedEffect(name) {
-        if (!name.isNullOrEmpty() && name != "Unknown") {
-            navController.navigate("AllScreenNav") {
-                popUpTo("userinfo") { inclusive = true } // remove from back stack
-            }
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        val name = UserPreferences.getName(context).first()
+        val destination = if(name.isNullOrEmpty())"name_input" else "AllScreenNav"
+        navController.navigate(destination){
+            popUpTo(0)
         }
-    }
-    
-    if (name == null || name == "Unknown") {
-        NameInputScreen(onContinue = {
-            viewModel.saveName(it)
-        })
     }
 }
 
 @Composable
-fun NameInputScreen(onContinue: (String) -> Unit) {
+fun NameInputScreen(viewModel: NameViewModel = viewModel(),
+                    navController: NavController) {
     var nameInput by remember { mutableStateOf("") }
 
     LazyColumn(
@@ -125,7 +121,10 @@ fun NameInputScreen(onContinue: (String) -> Unit) {
 
             Button(
                 onClick = {
-                    onContinue(nameInput)
+                    viewModel.saveName(nameInput)
+                    navController.navigate("onboarding"){
+                        popUpTo(0)
+                    }
                 },
                 enabled = nameInput.isNotBlank(),
                 modifier = Modifier

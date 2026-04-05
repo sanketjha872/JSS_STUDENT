@@ -60,7 +60,7 @@ fun FullPAge(
 ) {
     val context = LocalContext.current
     val nameFlow = remember { UserPreferences.getName(context) }
-    val name by nameFlow.collectAsState(initial = "Unknown")
+    val name by nameFlow.collectAsState(initial = null)
 
     val subjectsList by viewModel.getAll().observeAsState(emptyList())
     val allAttendance by viewModel.getAllAttendance().observeAsState(emptyList())
@@ -210,7 +210,7 @@ fun parseEndTime(timeRange: String): LocalTime {
 @Composable
 fun GreetingHeader(
     greeting: String,
-    name: String
+    name: String?
 ) {
     Text(
         text = "$greeting\n$name",

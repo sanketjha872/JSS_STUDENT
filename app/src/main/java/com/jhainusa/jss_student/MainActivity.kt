@@ -34,12 +34,14 @@ import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.MainViewModelFactory
 import com.jhainusa.jss_student.RoomDatabase.ScheduleDatabase
 import com.jhainusa.jss_student.RoomDatabase.ScheduleRepository
+import com.jhainusa.jss_student.UserPref.NameInputScreen
 import com.jhainusa.jss_student.UserPref.UserInfoScreen
 import com.jhainusa.jss_student.ciaPaperPage.InternalsListScreen
 import com.jhainusa.jss_student.ciaPaperPage.PaperListScreen
 import com.jhainusa.jss_student.ciaPaperPage.Papers
 import com.jhainusa.jss_student.ciaPaperPage.Routes
 import com.jhainusa.jss_student.ciaPaperPage.SemesterListScreen
+import com.jhainusa.jss_student.onboarding.OnboardingScreen
 
 class MainActivity : ComponentActivity() {
     lateinit var viewModel: MainVIewModel
@@ -106,6 +108,22 @@ class MainActivity : ComponentActivity() {
                 }){
                 composable("userinfo"){
                     UserInfoScreen(navController = navController)
+                }
+                composable("name_input") { NameInputScreen(navController=navController) }
+
+                composable("onboarding"){
+                    OnboardingScreen(
+                        onFinish = {
+                            navController.navigate("AllScreenNav"){
+                                popUpTo("onboarding") { inclusive = true }
+                            }
+                        },
+                        onSkip = {
+                            navController.navigate("AllScreenNav"){
+                                popUpTo("onboarding") { inclusive = true }
+                            }
+                        }
+                    )
                 }
                 composable("AllScreenNav"){
                     AllScreenNav(viewModel,navController)

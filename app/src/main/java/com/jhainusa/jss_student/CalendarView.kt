@@ -5,42 +5,26 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -54,8 +38,19 @@ fun CalendarWithExpandableView(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
+    val firstOfMonth = currentMonth.atDay(1)
+    val totalDays = currentMonth.lengthOfMonth()
+    val firstDayOfWeek = (firstOfMonth.dayOfWeek.value % 7)
+
+    val weeks = ((firstDayOfWeek + totalDays + 6) / 7)
+
+    val rowHeight = 54.dp
+    val headerHeight = 48.dp + 16.dp
+
+    val expandedHeight = headerHeight + (weeks * rowHeight)
+
     val calendarHeight by animateDpAsState(
-        targetValue = if (isExpanded) 330.dp else 90.dp,
+        targetValue = if (isExpanded) expandedHeight else 90.dp,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
             stiffness = Spring.StiffnessLow
@@ -82,7 +77,12 @@ fun CalendarWithExpandableView(
                 }
         ) {
             if (isExpanded) {
-                FullMonthCalendar(currentMonth, selectedDate, onDateSelected)
+                FullMonthCalendar(
+                    currentMonth,
+                    selectedDate,
+                    weeks,
+                    onDateSelected
+                )
             } else {
                 DateStrip(currentMonth, selectedDate, onDateSelected)
             }
@@ -123,7 +123,6 @@ fun DateStrip(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .padding(horizontal = 8.dp)
                     .clickable { ondaySelected(date) }
@@ -132,10 +131,12 @@ fun DateStrip(
                     text = date.dayOfWeek.name.take(3),
                     color = if (isSelected) Color.Black else Color.Gray,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    fontSize = 12.sp,
                     fontFamily = plusJak,
-                    fontSize = 12.sp
-                )
+                    )
+
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -147,9 +148,9 @@ fun DateStrip(
                 ) {
                     Text(
                         text = date.dayOfMonth.toString(),
-                        fontFamily = plusJak,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
+                        fontFamily = plusJak,
                         color = if (isSelected) Color.White else Color.Black
                     )
                 }
@@ -163,17 +164,26 @@ fun DateStrip(
 fun FullMonthCalendar(
     yearMonth: YearMonth,
     selectedDate: LocalDate,
+    weeks: Int,
     onDateSelected: (LocalDate) -> Unit
 ) {
-    val daysOfWeek = DayOfWeek.values()
+    val daysOfWeek = listOf(
+        DayOfWeek.SUNDAY,
+        DayOfWeek.MONDAY,
+        DayOfWeek.TUESDAY,
+        DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY,
+        DayOfWeek.FRIDAY,
+        DayOfWeek.SATURDAY
+    )
+
     val firstOfMonth = yearMonth.atDay(1)
-    val lastOfMonth = yearMonth.atEndOfMonth()
+    val totalDays = yearMonth.lengthOfMonth()
     val firstDayOfWeek = (firstOfMonth.dayOfWeek.value % 7)
 
-    val totalDays = lastOfMonth.dayOfMonth
-    val weeks = ((firstDayOfWeek + totalDays + 6) / 7).toInt().coerceAtLeast(5)
-
     Column(modifier = Modifier.padding(16.dp)) {
+
+        // 🔥 Header (Days)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             daysOfWeek.forEach { day ->
                 Text(
@@ -181,8 +191,8 @@ fun FullMonthCalendar(
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
                     color = Color.Gray,
-                    fontWeight = FontWeight.Medium,
                     fontFamily = plusJak,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 12.sp
                 )
             }
@@ -190,20 +200,26 @@ fun FullMonthCalendar(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // 🔥 Prepare days list
         val days = mutableListOf<LocalDate?>()
         repeat(firstDayOfWeek) { days.add(null) }
         for (day in 1..totalDays) {
             days.add(yearMonth.atDay(day))
         }
-        
+
+        // 🔥 Render weeks dynamically
         for (week in 0 until weeks) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 for (day in 0..6) {
                     val index = week * 7 + day
                     val date = days.getOrNull(index)
-                    val isSelected = date != null && date == selectedDate
-                    val isToday = date != null && date == LocalDate.now()
-                    
+
+                    val isSelected = date == selectedDate
+                    val isToday = date == LocalDate.now()
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -211,19 +227,25 @@ fun FullMonthCalendar(
                             .padding(4.dp)
                             .clip(CircleShape)
                             .background(
-                                color = if (isSelected) Color(0xFF262626) else Color.Transparent
+                                if (isSelected) Color(0xFF262626) else Color.Transparent
                             )
-                            .clickable(enabled = date != null) { date?.let { onDateSelected(it) } },
+                            .clickable(enabled = date != null) {
+                                date?.let { onDateSelected(it) }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         if (date != null) {
                             Text(
                                 text = date.dayOfMonth.toString(),
-                                color = if (isSelected) Color.White else if (isToday) Color(0xFF262626) else Color.Black,
-                                fontFamily = plusJak,
+                                color = when {
+                                    isSelected -> Color.White
+                                    isToday -> Color(0xFF262626)
+                                    else -> Color.Black
+                                },
                                 fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
-                                fontSize = 14.sp
-                            )
+                                fontSize = 14.sp,
+                                fontFamily = plusJak,
+                                )
                         }
                     }
                 }
