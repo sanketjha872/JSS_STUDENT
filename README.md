@@ -2,6 +2,8 @@
 
 A smart and modern timetable management app designed for students to easily extract, manage, and view their class schedules using AI.
 
+<img width="1220" height="2712" alt="Screenshot_20260307-175803 Schedo" src="https://github.com/user-attachments/assets/542a6201-50dc-4ce4-bf7a-06e9342602e9" />
+
 🚀 Features
 📸 AI Timetable Extraction
 Upload a timetable image
