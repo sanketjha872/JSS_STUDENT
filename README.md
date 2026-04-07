@@ -2,12 +2,19 @@
 
 A smart and modern timetable management app designed for students to easily extract, manage, and view their class schedules using AI.
 
-<img width="100" height="500" alt="Screenshot_20260307-175803 Schedo" src="https://github.com/user-attachments/assets/542a6201-50dc-4ce4-bf7a-06e9342602e9" />
+<img width="200" height="500" alt="Screenshot_20260307-175803 Schedo" src="https://github.com/user-attachments/assets/542a6201-50dc-4ce4-bf7a-06e9342602e9" />
+<img width="200" height="500" alt="Screenshot_20260307-175814 Schedo" src="https://github.com/user-attachments/assets/7e60270e-d16f-4467-8d4f-9ef1f2a81ea0" />
+<img width="200" height="500" alt="Screenshot_20260307-180623 Schedo" src="https://github.com/user-attachments/assets/e1add91d-fa31-4ff1-a5a0-f9350cbb2b7e" />
+<img width="200" height="500" alt="Screenshot_20260307-180734 Schedo" src="https://github.com/user-attachments/assets/6d7d006a-ae85-413e-8caa-f34e3f796bbd" />
+<img width="200" height="500" alt="Screenshot_20260308-161447 Schedo" src="https://github.com/user-attachments/assets/fae962a7-0d26-4917-984d-2142c64900a5" />
+
+
 
 🚀 Features
+
 📸 AI Timetable Extraction
 Upload a timetable image
-Automatically converts it into structured JSON using AI (Gemini Vision API)
+Automatically converts it into structured JSON using AI (Gemini API)
 No manual entry required
 🗂️ Smart Schedule Management
 Stores timetable locally using Room Database
