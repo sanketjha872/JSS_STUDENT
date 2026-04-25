@@ -45,13 +45,12 @@ fun PaperListScreen(
     viewModel: PapersViewModel = viewModel(),
 ) {
     val papers by viewModel.pdf_Url.collectAsState()
-
     LaunchedEffect(yearId,semId) {
         viewModel.loadpdfs(yearId,semId,papertype)
     }
-    PdfDownloaderAndOpener(papers!!)
+    PdfDownloaderAndOpener(papers!!,papertype)
     if (!papers.isNullOrEmpty()) {
-        PdfDownloaderAndOpener(pdfUrl = papers!!)
+        PdfDownloaderAndOpener(pdfUrl = papers!!,papertype)
     } else {
         Box(
             modifier = Modifier.fillMaxSize(),

@@ -33,14 +33,14 @@ import java.io.FileOutputStream
 import java.net.URL
 
 @Composable
-fun PdfDownloaderAndOpener(pdfUrl: String) {
+fun PdfDownloaderAndOpener(pdfUrl: String,papertype : String) {
     val context = LocalContext.current
     var isDownloading by remember { mutableStateOf(false) }
 
     LaunchedEffect(pdfUrl) {
         if (pdfUrl.isNotEmpty()) {
             isDownloading = true
-            downloadAndOpenPdf(context, pdfUrl)
+            downloadAndOpenPdf(context, pdfUrl,papertype)
             isDownloading = false
         }
     }
@@ -60,13 +60,13 @@ fun PdfDownloaderAndOpener(pdfUrl: String) {
     }
 }
 
-suspend fun downloadAndOpenPdf(context: Context, url: String) {
+suspend fun downloadAndOpenPdf(context: Context, url: String,papertype: String) {
     withContext(Dispatchers.IO) {
         try {
             // Clean the URL string from potential quotes or whitespace
             val cleanedUrl = url.trim().removeSurrounding("\"")
 
-            val fileName = "downloaded_file.pdf"
+            val fileName = "$papertype.pdf"
             val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
             val file = File(storageDir, fileName)
 
