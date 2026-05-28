@@ -60,15 +60,23 @@ fun PdfDownloaderAndOpener(pdfUrl: String,papertype : String) {
     }
 }
 
-suspend fun downloadAndOpenPdf(context: Context, url: String,papertype: String) {
+suspend fun downloadAndOpenPdf(context: Context, url: String, papertype: String) {
     withContext(Dispatchers.IO) {
         try {
-            // Clean the URL string from potential quotes or whitespace
-            val cleanedUrl = url.trim().removeSurrounding("\"")
-
             val fileName = "$papertype.pdf"
             val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
             val file = File(storageDir, fileName)
+
+            // Check if file already exists for offline access
+            if (file.exists()) {
+                withContext(Dispatchers.Main) {
+                    openPdfFile(context, file)
+                }
+                return@withContext
+            }
+
+            // Clean the URL string from potential quotes or whitespace
+            val cleanedUrl = url.trim().removeSurrounding("\"")
 
             val urlConnection = URL(cleanedUrl).openConnection()
             val inputStream = BufferedInputStream(urlConnection.getInputStream())

@@ -1,6 +1,7 @@
 package com.jhainusa.jss_student
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import androidx.compose.ui.tooling.preview.Preview
+import com.jhainusa.jss_student.ui.theme.JSS_STUDENTTheme
 
 @Composable
 fun LottieLoader(message: String,resId: Int) {
@@ -27,15 +30,10 @@ fun LottieLoader(message: String,resId: Int) {
         composition,
         iterations = LottieConstants.IterateForever
     )
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentAlignment = Alignment.Center
-    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(20.dp)
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize().background(Color.White).padding(20.dp)
         ) {
             LottieAnimation(
                 composition,
@@ -49,5 +47,16 @@ fun LottieLoader(message: String,resId: Int) {
                 fontFamily = plusJak
             )
         }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LottieLoaderPreview() {
+    JSS_STUDENTTheme {
+        LottieLoader(
+            message = "Loading...",
+            resId = R.raw.loader
+        )
     }
 }
+
