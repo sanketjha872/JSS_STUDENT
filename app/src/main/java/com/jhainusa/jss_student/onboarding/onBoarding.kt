@@ -1,19 +1,28 @@
 package com.jhainusa.jss_student.onboarding
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -21,7 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.lerp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.jhainusa.jss_student.GeminiBackend.sendImageToSupabase
+import com.jhainusa.jss_student.LottieLoader
 import com.jhainusa.jss_student.R
+import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
+import com.jhainusa.jss_student.UserPref.NameViewModel
 import com.jhainusa.jss_student.plusJak
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -49,19 +65,53 @@ val onboardingPages = listOf(
     OnboardingPage(
         title = "Smart\nNotifications",
         description = "Get timely notifications for your upcoming\nclasses and stay on track effortlessly.",
-        buttonText = "Get Started",
+        buttonText = "Continue",
         imageRes = R.drawable.smartnotif // Placeholder
+    ),
+    OnboardingPage(
+        title = "Upload Your\nTimetable",
+        description = "Finally, upload your timetable image\nto let AI organize your schedule.",
+        buttonText = "Upload & Finish",
+        imageRes = R.drawable.upload_square_svgrepo_com
     )
 )
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(
+    viewModel: MainVIewModel? = null,
+    nameViewModel: NameViewModel = viewModel(),
     onFinish: () -> Unit = {},
     onSkip: () -> Unit = {}
 ) {
     val pagerState = rememberPagerState(pageCount = { onboardingPages.size })
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val userId by nameViewModel.userIdFlow.collectAsState()
+    var loading by remember { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            loading = true
+            if (viewModel != null) {
+                sendImageToSupabase(
+                    context = context,
+                    uri = it,
+                    userIdStr = userId ?: "unknown_user",
+                    viewModel = viewModel
+                ) { success ->
+                    loading = false
+                    if (success) {
+                        onFinish()
+                    }
+                }
+            } else {
+                loading = false
+                // Fallback for preview or missing viewModel
+                onFinish()
+            }
+        }
+    }
 
 
     Scaffold(
@@ -126,7 +176,14 @@ fun OnboardingScreen(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    OnboardingContent(onboardingPages[pageIndex])
+                    OnboardingContent(
+                        page = onboardingPages[pageIndex],
+                        onImageClick = {
+                            if (pageIndex == onboardingPages.size - 1) {
+                                launcher.launch("image/*")
+                            }
+                        }
+                    )
                 }
             }
 
@@ -184,7 +241,7 @@ fun OnboardingScreen(
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
                         } else {
-                            onFinish()
+                            launcher.launch("image/*")
                         }
                     },
                     modifier = Modifier
@@ -207,28 +264,44 @@ fun OnboardingScreen(
             }
         }
     }
+
+    if (loading) {
+        Dialog(
+            onDismissRequest = { },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            LottieLoader("AI is processing your timetable...", R.raw.handloader)
+        }
+    }
 }
 
 @Composable
-fun OnboardingContent(page: OnboardingPage) {
+fun OnboardingContent(page: OnboardingPage, onImageClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Image Section
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(1f)
-                .aspectRatio(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = page.imageRes),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(1f)
+        // Image or Upload Section
+        if (page.buttonText == "Upload & Finish") {
+            UploadBox(
+                modifier = Modifier.padding(vertical = 20.dp),
+                onClick = onImageClick
             )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(1f)
+                    .aspectRatio(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = page.imageRes),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(1f)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -256,6 +329,61 @@ fun OnboardingContent(page: OnboardingPage) {
         )
     }
 }
+
+@Composable
+fun UploadBox(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val stroke = Stroke(
+        width = 2f,
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(15f, 15f), 0f)
+    )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .drawBehind {
+                drawRoundRect(
+                    color = Color(0xFFD1D5DB),
+                    style = stroke,
+                    cornerRadius = CornerRadius(24.dp.toPx())
+                )
+            }
+            .background(Color(0xFFF9FAFB), RoundedCornerShape(24.dp))
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(
+                painter = painterResource(id = R.drawable.uploadimg),
+                contentDescription = null,
+                modifier = Modifier.size(42.dp),
+                tint = Color.Black
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Upload your image here",
+                fontFamily = plusJak,
+                fontSize = 16.sp,
+                color = Color(0xFF4B5563)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = Color(0xFFF3F4F6),
+                border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+            ) {
+                Text(
+                    text = "Browse",
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    fontFamily = plusJak,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
+            }
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable

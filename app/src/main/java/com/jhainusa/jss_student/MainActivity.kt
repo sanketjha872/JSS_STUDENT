@@ -36,7 +36,6 @@ import com.jhainusa.jss_student.RoomDatabase.MainViewModelFactory
 import com.jhainusa.jss_student.RoomDatabase.ScheduleDatabase
 import com.jhainusa.jss_student.RoomDatabase.ScheduleRepository
 import com.jhainusa.jss_student.UserPref.NameInputScreen
-import com.jhainusa.jss_student.UserPref.UserInfoScreen
 import com.jhainusa.jss_student.UserPref.UserPreferences
 import com.jhainusa.jss_student.UserPref.UserSession
 import com.jhainusa.jss_student.ciaPaperPage.InternalsListScreen
@@ -125,6 +124,7 @@ class MainActivity : ComponentActivity() {
 
                 composable("onboarding"){
                     OnboardingScreen(
+                        viewModel = viewModel,
                         onFinish = {
                             navController.navigate("AllScreenNav"){
                                 popUpTo("onboarding") { inclusive = true }
