@@ -52,6 +52,10 @@ fun SemesterListScreen(
 
     LaunchedEffect(yearId) {
         viewModel.loadsemesters(yearId)
+        com.jhainusa.jss_student.AnalyticsHelper.logScreenView("SemesterListScreen", "SemesterExam")
+        com.jhainusa.jss_student.AnalyticsHelper.logEvent("view_semesters", android.os.Bundle().apply {
+            putString("year_id", yearId)
+        })
     }
     when{
         semesters == null -> {

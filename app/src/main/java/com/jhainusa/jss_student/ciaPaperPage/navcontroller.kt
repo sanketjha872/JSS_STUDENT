@@ -14,6 +14,6 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 object Routes {
     const val SEMESTER_LIST = "semesters"
     const val PAPER_LIST = "papers"
-
     const val PDF_LIST = "pdfs"
+    const val BUNK_ANALYTICS = "bunk_analytics/{subjectId}"
 }

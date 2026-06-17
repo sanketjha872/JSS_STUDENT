@@ -90,6 +90,10 @@ fun OnboardingScreen(
     val userId by nameViewModel.userIdFlow.collectAsState()
     var loading by remember { mutableStateOf(false) }
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        com.jhainusa.jss_student.AnalyticsHelper.logScreenView("OnboardingScreen", "Onboarding")
+    }
+
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             loading = true

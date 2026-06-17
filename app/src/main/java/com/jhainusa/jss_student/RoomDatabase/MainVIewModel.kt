@@ -30,6 +30,11 @@ class MainVIewModel(private val repository: ScheduleRepository) : ViewModel() {
 
     fun getAttendanceHistory(subjectId: Int) = repository.getAttendanceHistory(subjectId).asLiveData()
 
+    fun getAttendanceInRange(subjectId: Int, startDate: String, endDate: String) = 
+        repository.getAttendanceInRange(subjectId, startDate, endDate).asLiveData()
+
+    fun observeSchedule(subjectId: Int) = repository.observeSchedule(subjectId).asLiveData()
+
     fun getAllAttendance() = repository.getAllAttendanceRecords().asLiveData()
 
     fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {

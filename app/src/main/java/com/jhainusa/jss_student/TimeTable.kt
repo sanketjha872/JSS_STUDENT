@@ -68,6 +68,10 @@ fun TimeTable(vIewModel : MainVIewModel){
     var showExtraClassSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        AnalyticsHelper.logScreenView("TimeTableScreen", "TimeTable")
+    }
+
     Column(
         modifier=  Modifier.fillMaxSize()
             .padding(vertical = 20.dp),
@@ -227,6 +231,11 @@ fun AddExtraClassBottomSheet(
                         selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() },
                         "$startTime - $endTime"
                     )
+                    AnalyticsHelper.logEvent("add_extra_class", android.os.Bundle().apply {
+                        putString("subject", subject.subject)
+                        putString("date", selectedDate.toString())
+                        putString("time", "$startTime - $endTime")
+                    })
                     onDismiss()
                 }
             },
@@ -387,6 +396,11 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
                                     selectedDayName, 
                                     newStatus
                                 )
+                                AnalyticsHelper.logEvent("update_attendance", android.os.Bundle().apply {
+                                    putString("subject", item.schedule.subject)
+                                    putInt("status", newStatus)
+                                    putBoolean("is_extra", false)
+                                })
                             }
                         )
                     }
@@ -399,6 +413,11 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
                                 isExtra = true,
                                 onStatusChange = { newStatus ->
                                     viewModel.updateExtraClassAttendance(item.classSchedule.classId, newStatus)
+                                    AnalyticsHelper.logEvent("update_attendance", android.os.Bundle().apply {
+                                        putString("subject", item.parentSubject.subject)
+                                        putInt("status", newStatus)
+                                        putBoolean("is_extra", true)
+                                    })
                                 }
                             )
                         }

@@ -26,6 +26,10 @@ class ScheduleRepository(
         return classScheduleDao.getAttendanceHistory(subjectId)
     }
 
+    fun getAttendanceInRange(subjectId: Int, startDate: String, endDate: String): Flow<List<ClassSchedule>> {
+        return classScheduleDao.getAttendanceInRange(subjectId, startDate, endDate)
+    }
+
     fun getAllAttendanceRecords(): Flow<List<ClassSchedule>> {
         return classScheduleDao.getAllAttendanceRecords()
     }

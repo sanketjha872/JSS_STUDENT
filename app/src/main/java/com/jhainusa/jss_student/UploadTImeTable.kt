@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
 import com.jhainusa.jss_student.RoomDatabase.DaySchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
@@ -54,9 +55,14 @@ import kotlinx.coroutines.withContext
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun UploadTimeTableScreen(viewModel: MainVIewModel) {
+fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        AnalyticsHelper.logScreenView("SettingsScreen", "UploadTimeTable")
+    }
+
     val subjectsList by viewModel.getAll().observeAsState(emptyList())
     var searchSubject by remember { mutableStateOf("") }
     var showAddSheet by remember { mutableStateOf(false) }
@@ -186,8 +192,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel) {
                         isEditMode = isEditMode,
                         onClick = {
                             if (!isEditMode) {
-                                selectedSubjectForHistory = sub
-                                showHistoryDialog = true
+                                navController.navigate("bunk_analytics/${sub.subjectId}")
                             }
                         },
                         onEditClick = {

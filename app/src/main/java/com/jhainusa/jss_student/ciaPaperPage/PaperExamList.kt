@@ -47,6 +47,12 @@ fun PaperListScreen(
     val papers by viewModel.pdf_Url.collectAsState()
     LaunchedEffect(yearId,semId) {
         viewModel.loadpdfs(yearId,semId,papertype)
+        com.jhainusa.jss_student.AnalyticsHelper.logScreenView("PaperViewScreen", "PaperExamList")
+        com.jhainusa.jss_student.AnalyticsHelper.logEvent("view_paper", android.os.Bundle().apply {
+            putString("year_id", yearId)
+            putString("sem_id", semId)
+            putString("paper_type", papertype)
+        })
     }
     PdfDownloaderAndOpener(papers!!,papertype)
     if (!papers.isNullOrEmpty()) {

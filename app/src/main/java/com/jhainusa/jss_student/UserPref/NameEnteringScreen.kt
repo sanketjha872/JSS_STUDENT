@@ -46,6 +46,10 @@ fun NameInputScreen(viewModel: NameViewModel = viewModel(),
                     navController: NavController) {
     var nameInput by remember { mutableStateOf("") }
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        com.jhainusa.jss_student.AnalyticsHelper.logScreenView("NameInputScreen", "NameEnteringScreen")
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

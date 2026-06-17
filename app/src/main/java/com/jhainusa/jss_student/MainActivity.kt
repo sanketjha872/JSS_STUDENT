@@ -31,6 +31,9 @@ import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.MainViewModelFactory
 import com.jhainusa.jss_student.RoomDatabase.ScheduleDatabase
@@ -48,6 +51,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
     lateinit var viewModel: MainVIewModel
 
     @OptIn(ExperimentalAnimationApi::class)
@@ -55,6 +59,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        AnalyticsHelper.init(this)
+        AnalyticsHelper.logEvent(FirebaseAnalytics.Event.APP_OPEN)
 
         enableEdgeToEdge()
 
@@ -168,6 +174,13 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
+                composable(
+                    route = Routes.BUNK_ANALYTICS,
+                    arguments = listOf(navArgument("subjectId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val subjectId = backStackEntry.arguments?.getInt("subjectId") ?: 0
+                    BunkAnalyticsScreen(viewModel, subjectId)
+                }
 
                 composable(
                     route = "${Routes.PDF_LIST}/{yearId}/{semesterId}/{paperId}",
@@ -216,9 +229,9 @@ fun AllScreenNav(viewModel: MainVIewModel, mainNav: NavController) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Home.route) { FullPAge(viewModel) }
-            composable(BottomNavItem.Graph.route) { TimeTable(viewModel) }
             composable(BottomNavItem.Exams.route) { Papers(mainNav) }
-            composable(BottomNavItem.Setting.route) { UploadTimeTableScreen(viewModel) }
+            composable(BottomNavItem.Graph.route) { TimeTable(viewModel) }
+            composable(BottomNavItem.Setting.route) { UploadTimeTableScreen(viewModel,mainNav) }
         }
     }
 }

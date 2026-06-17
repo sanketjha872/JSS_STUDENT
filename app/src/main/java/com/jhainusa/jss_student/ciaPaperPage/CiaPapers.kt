@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.jhainusa.jss_student.AnalyticsHelper
 import com.jhainusa.jss_student.R
 import com.jhainusa.jss_student.SkeletonYearItem
 import com.jhainusa.jss_student.plusJak
@@ -72,6 +73,7 @@ fun Papers(navController: NavController) {
 
     LaunchedEffect(Unit) {
         viewModel.loadyears()
+        AnalyticsHelper.logScreenView("CiaPapersScreen", "Papers")
     }
 
     val scrollState = rememberLazyListState()
@@ -92,6 +94,9 @@ fun Papers(navController: NavController) {
             else{
             items(list) { yearId ->
                 Years(year = yearId) {
+                    AnalyticsHelper.logEvent("select_year", android.os.Bundle().apply {
+                        putString("year_id", yearId)
+                    })
                     navController.navigate("semesters/$yearId")
                 }
             }

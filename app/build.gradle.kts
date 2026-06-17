@@ -17,8 +17,8 @@ android {
         applicationId = "com.jhainusa.jss_student"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.firebase.analytics)
     implementation(libs.firebase.database)
     implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
@@ -128,4 +129,5 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
     implementation("com.google.accompanist:accompanist-placeholder-material:0.34.0")
+    implementation("androidx.compose.material:material-icons-extended")
 }

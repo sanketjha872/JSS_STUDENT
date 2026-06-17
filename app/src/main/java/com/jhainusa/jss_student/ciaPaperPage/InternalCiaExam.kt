@@ -51,8 +51,13 @@ fun InternalsListScreen(
 ) {
     val internals by viewModel.papers.collectAsState()
 
-    LaunchedEffect(yearId) {
-        viewModel.loadPapers(yearId,semId)
+    LaunchedEffect(yearId, semId) {
+        viewModel.loadPapers(yearId, semId)
+        com.jhainusa.jss_student.AnalyticsHelper.logScreenView("InternalsListScreen", "InternalCiaExam")
+        com.jhainusa.jss_student.AnalyticsHelper.logEvent("view_internals", android.os.Bundle().apply {
+            putString("year_id", yearId)
+            putString("sem_id", semId)
+        })
     }
     when{
         internals == null -> {

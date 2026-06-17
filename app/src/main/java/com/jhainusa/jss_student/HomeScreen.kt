@@ -62,6 +62,10 @@ fun FullPAge(
     val nameFlow = remember { UserPreferences.getName(context) }
     val name by nameFlow.collectAsState(initial = null)
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        AnalyticsHelper.logScreenView("HomeScreen", "HomeScreen")
+    }
+
     val subjectsList by viewModel.getAll().observeAsState(emptyList())
     val allAttendance by viewModel.getAllAttendance().observeAsState(emptyList())
 

@@ -52,6 +52,9 @@ interface ClassScheduleDao {
     @Query("SELECT * FROM class_schedule WHERE date = :date")
     fun getAllSchedulesForDate(date: String): Flow<List<ClassSchedule>>
 
+    @Query("SELECT * FROM class_schedule WHERE subjectOwnerId = :subjectId AND date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getAttendanceInRange(subjectId: Int, startDate: String, endDate: String): Flow<List<ClassSchedule>>
+
     @Query("SELECT * FROM class_schedule WHERE subjectOwnerId = :subjectId ORDER BY date DESC")
     fun getAttendanceHistory(subjectId: Int): Flow<List<ClassSchedule>>
 
