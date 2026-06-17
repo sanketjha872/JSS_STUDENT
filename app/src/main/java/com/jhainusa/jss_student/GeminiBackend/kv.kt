@@ -1,5 +1,6 @@
 package com.jhainusa.jss_student.GeminiBackend
 
+import com.jhainusa.jss_student.BuildConfig
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
@@ -25,8 +26,8 @@ interface SupabaseApiService {
 }
 
 object SupabaseClient {
-    private const val BASE_URL = "https://lawyxhtjelxjstyygxij.supabase.co/functions/v1/"
-    private const val API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxhd3l4aHRqZWx4anN0eXlneGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MDE5MDQsImV4cCI6MjA4ODI3NzkwNH0.gf8bvo6ZXX5MQSKHfzR1O_Dd_tce9Zi7EpgLef5NNCs"
+    private val BASE_URL = "${BuildConfig.SUPABASE_URL}/functions/v1/"
+    private val API_KEY = BuildConfig.SUPABASE_ANON_KEY
 
     val api: SupabaseApiService by lazy {
         val client = OkHttpClient.Builder()

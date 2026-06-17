@@ -3,9 +3,9 @@ package com.jhainusa.jss_student
 import android.os.Build
 import android.view.WindowInsets
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Canvas
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -22,28 +21,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.jhainusa.jss_student.RoomDatabase.ClassSchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
+import com.jhainusa.jss_student.ui.theme.JSS_STUDENTTheme
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -61,48 +57,50 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
         }
     }
 
-    var startDate by remember { mutableStateOf(LocalDate.now().minusMonths(1)) }
+    val minDate = remember(attendanceHistory) {
+        attendanceHistory.mapNotNull {
+            try { LocalDate.parse(it.date) } catch (e: Exception) { null }
+        }.minOrNull() ?: LocalDate.now().minusMonths(3)
+    }
+
+    var startDate by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
     var endDate by remember { mutableStateOf(LocalDate.now()) }
     
     // For date selection dialogs
     var showStartDatePicker by remember { mutableStateOf(false) }
 
     val filteredAttendance = attendanceHistory.filter {
-        val date = LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE)
-        !date.isBefore(startDate) && !date.isAfter(endDate)
+        val date = try { LocalDate.parse(it.date, DateTimeFormatter.ISO_DATE) } catch(e: Exception) { null }
+        date != null && !date.isBefore(startDate) && !date.isAfter(endDate)
     }
 
     val totalClassesInRange = filteredAttendance.size
     val attendedClassesInRange = filteredAttendance.count { it.attendanceStatus == 1 }
     val missedClassesInRange = filteredAttendance.count { it.attendanceStatus == 2 }
-    val rangeAttendanceRate = if (totalClassesInRange > 0) (attendedClassesInRange * 100 / totalClassesInRange) else 0
-
-    // Overall stats for bunk prediction
-    val totalClassesOverall = attendanceHistory.size
-    val attendedClassesOverall = attendanceHistory.count { it.attendanceStatus == 1 }
-    val overallAttendanceRate = if (totalClassesOverall > 0) (attendedClassesOverall.toDouble() / totalClassesOverall) else 0.0
+    val rangeAttendanceRate = if (totalClassesInRange > 0) (attendedClassesInRange.toDouble() / totalClassesInRange) else 0.0
+    val rangeAttendanceRatePercent = (rangeAttendanceRate * 100).toInt()
 
     val predictionText: String
     val predictionTitle: String
     val predictionSubtitle: String
     val predictionColor: Color
 
-    if (overallAttendanceRate >= 0.75) {
-        val maxBunks = ((attendedClassesOverall / 0.75) - totalClassesOverall).toInt()
+    if (rangeAttendanceRate >= 0.75) {
+        val maxBunks = if (totalClassesInRange > 0) ((attendedClassesInRange / 0.75) - totalClassesInRange).toInt() else 0
         predictionTitle = "$maxBunks More"
-        predictionSubtitle = "Safe bunks remaining"
-        predictionText = "You can miss $maxBunks more classes to stay above 75%."
+        predictionSubtitle = "Safe bunks in range"
+        predictionText = "In this period, you could miss $maxBunks more classes to stay above 75%."
         predictionColor = Color(0xFFFBE7D7)
     } else {
         // formula: (attended + x) / (total + x) >= 0.75  => attended + x >= 0.75*total + 0.75*x => 0.25x >= 0.75*total - attended => x >= 3*total - 4*attended
-        val classesToAttend = if (totalClassesOverall > 0) {
-            ceil(3.0 * totalClassesOverall - 4.0 * attendedClassesOverall).toInt().coerceAtLeast(0)
+        val classesToAttend = if (totalClassesInRange > 0) {
+            ceil(3.0 * totalClassesInRange - 4.0 * attendedClassesInRange).toInt().coerceAtLeast(0)
         } else {
             0
         }
         predictionTitle = "Next $classesToAttend"
-        predictionSubtitle = "Classes to hit 75%"
-        predictionText = "Attend the next $classesToAttend classes to reach 75% attendance."
+        predictionSubtitle = "Needed in range"
+        predictionText = "To reach 75% for this period, you would need to attend $classesToAttend more classes."
         predictionColor = Color(0xFFDBF8EB)
     }
 
@@ -141,14 +139,25 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
         ) {
             Spacer(modifier = Modifier.height(14.dp))
 
-            AttendanceCalendarCard(attendanceHistory)
+            AttendanceCalendarCard(attendanceHistory, startDate, endDate)
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            DateRangeFilterPresets(
+                minDate = minDate,
+                onRangeSelected = { start, end ->
+                    startDate = start
+                    endDate = end
+                },
+                currentStart = startDate,
+                currentEnd = endDate
+            )
+
             RangeSummarySection(
-                rate = "$rangeAttendanceRate%",
+                rate = "$rangeAttendanceRatePercent%",
                 attended = attendedClassesInRange.toString(),
                 missed = missedClassesInRange.toString(),
+                total = totalClassesInRange.toString(),
                 dateRangeText = "Showing: ${startDate.format(DateTimeFormatter.ofPattern("MMM d"))} - ${endDate.format(DateTimeFormatter.ofPattern("MMM d"))}",
                 onEditRange = { showStartDatePicker = true }
             )
@@ -167,8 +176,8 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
                 Spacer(modifier = Modifier.width(16.dp))
                 StatsSmallCard(
                     modifier = Modifier.weight(1f),
-                    title = "${attendedClassesOverall}/${totalClassesOverall}",
-                    subtitle = "Total Attendance",
+                    title = "${attendedClassesInRange}/${totalClassesInRange}",
+                    subtitle = "Range Attendance",
                     icon = Icons.Default.ElectricBolt,
                     backgroundColor = Color(0xFFDBEEFB)
                 )
@@ -219,12 +228,27 @@ fun DateRangePickerDialog(
                 } ?: initialEnd
                 onRangeSelected(start, end)
             }) {
-                Text("OK")
+                Text("OK",
+                    color = Color(0xFF262626),
+                    fontFamily = plusJak,
+                    fontWeight = FontWeight.Bold)
             }
         },
+        colors = DatePickerDefaults.colors(
+            containerColor = Color.White,
+            titleContentColor = Color.White,
+            dividerColor = Color(0xFF262626),
+            dayContentColor = Color.Black,
+            todayDateBorderColor = Color.Black,
+            selectedDayContentColor = Color.Black
+
+        ),
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancel",
+                    color = Color(0xFF262626),
+                    fontFamily = plusJak,
+                    fontWeight = FontWeight.Bold)
             }
         }
     ) {
@@ -234,9 +258,13 @@ fun DateRangePickerDialog(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AttendanceCalendarCard(attendanceHistory: List<ClassSchedule>) {
+fun AttendanceCalendarCard(
+    attendanceHistory: List<ClassSchedule>,
+    startDate: LocalDate,
+    endDate: LocalDate
+) {
     val accentColor = Color(0xFF262626)
-    var currentMonth by remember { mutableStateOf(YearMonth.now()) }
+    var currentMonth by remember(endDate) { mutableStateOf(YearMonth.from(endDate)) }
     
     val attendanceMap = attendanceHistory.associateBy { it.date }
 
@@ -251,13 +279,26 @@ fun AttendanceCalendarCard(attendanceHistory: List<ClassSchedule>) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = plusJak,
-                    color = Color(0xFF262626)
-                )
+        AnimatedContent(
+            targetState = currentMonth,
+            transitionSpec = {
+                if (targetState > initialState) {
+                    (slideInHorizontally { width -> width } + fadeIn() togetherWith
+                            slideOutHorizontally { width -> -width } + fadeOut())
+                } else {
+                    (slideInHorizontally { width -> -width } + fadeIn() togetherWith
+                            slideOutHorizontally { width -> width } + fadeOut())
+                }
+            }
+        ) { targetMonth ->
+            Text(
+                text = targetMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = plusJak,
+                color = Color(0xFF262626)
+            )
+        }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
@@ -345,31 +386,52 @@ fun AttendanceCalendarCard(attendanceHistory: List<ClassSchedule>) {
                         if (day.isNotEmpty()) {
                             val date = currentMonth.atDay(day.toInt())
                             val dateString = date.format(DateTimeFormatter.ISO_DATE)
-                            val attendance = attendanceMap[dateString]
                             
-                            val bgColor = when(attendance?.attendanceStatus) {
+                            val isWithinRange = !date.isBefore(startDate) && !date.isAfter(endDate)
+                            val attendance = if (isWithinRange) attendanceMap[dateString] else null
+                            
+                            val targetBgColor = when(attendance?.attendanceStatus) {
                                 1 -> Color(0xFF77BB7E) // Present - Green
                                 2 -> Color(0xF3F24D4D) // Absent - Red
                                 else -> Color.Transparent
                             }
-                            val textColor = when(attendance?.attendanceStatus) {
-                                1 -> Color.White
-                                2 -> Color.White
+                            val animatedBgColor by animateColorAsState(
+                                targetValue = targetBgColor,
+                                animationSpec = tween(durationMillis = 400)
+                            )
+
+                            val targetTextColor = when {
+                                attendance != null -> Color.White
+                                !isWithinRange -> Color.LightGray.copy(alpha = 0.8f)
                                 else -> Color(0xFF4B5563)
                             }
+                            val animatedTextColor by animateColorAsState(
+                                targetValue = targetTextColor,
+                                animationSpec = tween(durationMillis = 400)
+                            )
+
+                            val scale by animateFloatAsState(
+                                targetValue = if (isWithinRange) 1f else 0.9f,
+                                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                            )
 
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
+                                    .graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                        alpha = if (isWithinRange) 1f else 0.6f
+                                    }
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(bgColor),
+                                    .background(animatedBgColor),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = day,
                                     fontSize = 16.sp,
                                     fontFamily = plusJak,
-                                    color = textColor,
+                                    color = animatedTextColor,
                                     fontWeight = if (attendance != null) FontWeight.Bold else FontWeight.Normal
                                 )
                             }
@@ -381,8 +443,9 @@ fun AttendanceCalendarCard(attendanceHistory: List<ClassSchedule>) {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun RangeSummarySection(rate: String, attended: String, missed: String, dateRangeText: String, onEditRange: () -> Unit) {
+fun RangeSummarySection(rate: String, attended: String, missed: String, total: String, dateRangeText: String, onEditRange: () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -390,7 +453,7 @@ fun RangeSummarySection(rate: String, attended: String, missed: String, dateRang
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF3F4F6))
                 .clickable { onEditRange() }
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -441,7 +504,7 @@ fun RangeSummarySection(rate: String, attended: String, missed: String, dateRang
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             RangeSummaryItem(
                 modifier = Modifier.weight(1f),
@@ -449,25 +512,66 @@ fun RangeSummarySection(rate: String, attended: String, missed: String, dateRang
                 value = rate,
                 backgroundColor = Color(0xFFE2DFFB),
                 textColor = Color(0xFF1A1A1A),
-                shape = RoundedCornerShape(20.dp,5.dp,5.dp,20.dp)
+                shape = RoundedCornerShape(20.dp, 5.dp, 5.dp, 20.dp)
             )
             RangeSummaryItem(
                 modifier = Modifier.weight(1f),
-                label = "ATTENDED",
+                label = "PRESENT",
                 value = attended,
-                backgroundColor = Color(0xFFDBEEFB),
+                backgroundColor = Color(0xFFDBF8EB),
                 textColor = Color(0xFF1A1A1A),
                 shape = RoundedCornerShape(5.dp)
 
             )
             RangeSummaryItem(
                 modifier = Modifier.weight(1f),
-                label = "MISSED",
+                label = "ABSENT",
                 value = missed,
                 backgroundColor = Color(0xFFF9E0E0),
                 textColor = Color(0xFF1A1A1A),
-                shape = RoundedCornerShape(5.dp,20.dp,20.dp,5.dp)
+                shape = RoundedCornerShape(5.dp, 20.dp, 20.dp, 5.dp)
             )
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun DateRangeFilterPresets(
+    minDate: LocalDate,
+    onRangeSelected: (LocalDate, LocalDate) -> Unit,
+    currentStart: LocalDate,
+    currentEnd: LocalDate
+) {
+    val today = LocalDate.now()
+    val options = listOf(
+        "7D" to today.minusDays(7),
+        "1M" to today.minusMonths(1),
+        "3M" to today.minusMonths(3),
+        "ALL" to minDate
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        options.forEach { (label, start) ->
+            val isSelected = currentStart == start && currentEnd == today
+            val animatedColor by animateColorAsState(if (isSelected) Color(0xFF262626) else Color(0xFFF3F4F6))
+            val animatedContentColor by animateColorAsState(if (isSelected) Color.White else Color.Gray)
+            
+            Surface(
+                onClick = { onRangeSelected(start, today) },
+                shape = RoundedCornerShape(12.dp),
+                color = animatedColor,
+                contentColor = animatedContentColor,
+                modifier = Modifier.height(36.dp).weight(1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        fontFamily = plusJak)
+                }
+            }
         }
     }
 }
@@ -498,13 +602,21 @@ fun RangeSummaryItem(
             color = textColor.copy(alpha = 0.8f)
         )
         Spacer(modifier = Modifier.height(5.dp))
-        Text(
-            text = value,
-            fontSize = 28.sp,
-            fontFamily = plusJak,
-            fontWeight = FontWeight.Bold,
-            color = textColor
-        )
+        AnimatedContent(
+            targetState = value,
+            transitionSpec = {
+                (slideInVertically { height -> height } + fadeIn() togetherWith
+                        slideOutVertically { height -> -height } + fadeOut())
+            }
+        ) { targetValue ->
+            Text(
+                text = targetValue,
+                fontSize = 26.sp,
+                fontFamily = plusJak,
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
+        }
     }
 }
 
@@ -531,25 +643,41 @@ fun StatsSmallCard(
             tint = PrimaryColor
         )
         Column(){
-            Text(
-                text = title,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = plusJak,
-                color = PrimaryColor,
-                modifier = Modifier.padding(4.dp)
-            )
+            AnimatedContent(
+                targetState = title,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(220, delayMillis = 90)) +
+                            scaleIn(initialScale = 0.92f, animationSpec = tween(220, delayMillis = 90)))
+                        .togetherWith(fadeOut(animationSpec = tween(90)))
+                }
+            ) { targetTitle ->
+                Text(
+                    text = targetTitle,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = plusJak,
+                    color = PrimaryColor,
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
             Spacer(modifier = Modifier.height(5.dp))
-            Text(
-                text = subtitle,
-                fontSize = 12.sp,
-                color = Color.DarkGray,
-                fontFamily = plusJak,
-                modifier = Modifier.clip(RoundedCornerShape(10.dp))
-                .background(Color.White)
-                .padding(5.dp)
-
-            )
+            AnimatedContent(
+                targetState = subtitle,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(90))
+                }
+            ) { targetSubtitle ->
+                Text(
+                    text = targetSubtitle,
+                    fontSize = 12.sp,
+                    color = Color.DarkGray,
+                    fontFamily = plusJak,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White)
+                        .padding(5.dp)
+                )
+            }
         }
     }
 }
@@ -581,14 +709,21 @@ fun FuturePredictionCard(predictionText: String) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = predictionText,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = plusJak,
-            color = Color.White,
-            lineHeight = 28.sp
-        )
+        AnimatedContent(
+            targetState = predictionText,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+            }
+        ) { targetText ->
+            Text(
+                text = targetText,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = plusJak,
+                color = Color.White,
+                lineHeight = 28.sp
+            )
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -615,5 +750,18 @@ fun FuturePredictionCard(predictionText: String) {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true)
+@Composable
+fun DateRangePickerDialogPreview() {
+        DateRangePickerDialog(
+            initialStart = LocalDate.now(),
+            initialEnd = LocalDate.now().plusDays(7),
+            onDismiss = {},
+            onRangeSelected = { _, _ -> }
+        )
 }
 
