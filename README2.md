@@ -1,4 +1,4 @@
-# 📅 Schedo — JSS Student App
+# 📅 Schedo — An AI Attendance Tracker App
 
 **Your timetable, sorted by AI. Your attendance, tracked automatically.**
 
