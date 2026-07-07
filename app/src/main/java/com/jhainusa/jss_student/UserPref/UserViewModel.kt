@@ -18,6 +18,9 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
     private val _userIdFlow = MutableStateFlow<String?>(null)
     val userIdFlow: StateFlow<String?> = _userIdFlow.asStateFlow()
 
+    private val _notificationsEnabledFlow = MutableStateFlow(true)
+    val notificationsEnabledFlow: StateFlow<Boolean> = _notificationsEnabledFlow.asStateFlow()
+
     init {
         viewModelScope.launch {
             UserPreferences.getName(context).collect {
@@ -27,6 +30,17 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val id = UserPreferences.getOrCreateUserId(context)
             _userIdFlow.value = id
+        }
+        viewModelScope.launch {
+            UserPreferences.getNotificationsEnabled(context).collect {
+                _notificationsEnabledFlow.value = it
+            }
+        }
+    }
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            UserPreferences.setNotificationsEnabled(context, enabled)
         }
     }
 

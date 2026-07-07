@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 
 import androidx.compose.ui.unit.dp
 
@@ -21,8 +22,10 @@ fun inputBox(headline : String,
         shape = RoundedCornerShape(12.dp),
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedBorderColor = PrimaryColor,
-            unfocusedBorderColor = OutlineColor
-        )
+            unfocusedBorderColor = OutlineColor,
+            cursorColor = Color.Gray
+        ),
+
     )
     Spacer(modifier = Modifier.height(8.dp))
 }

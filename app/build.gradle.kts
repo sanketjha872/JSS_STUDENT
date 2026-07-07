@@ -17,7 +17,7 @@ android {
         applicationId = "com.jhainusa.jss_student"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
+        versionCode = 3
         versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -132,4 +132,8 @@ dependencies {
 
     implementation("com.google.accompanist:accompanist-placeholder-material:0.34.0")
     implementation("androidx.compose.material:material-icons-extended")
+
+    // QR Code Generation
+    implementation("com.google.zxing:core:3.5.4")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 }

@@ -36,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.RoomDatabase.ClassSchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
-import com.jhainusa.jss_student.ui.theme.JSS_STUDENTTheme
+import com.jhainusa.jss_student.RoomDatabase.Schedule
+import android.graphics.Bitmap
+import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -80,6 +82,11 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
     val rangeAttendanceRate = if (totalClassesInRange > 0) (attendedClassesInRange.toDouble() / totalClassesInRange) else 0.0
     val rangeAttendanceRatePercent = (rangeAttendanceRate * 100).toInt()
 
+    var showShareCard by remember { mutableStateOf(false) }
+    var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val context = LocalContext.current
+
+
     val predictionText: String
     val predictionTitle: String
     val predictionSubtitle: String
@@ -114,7 +121,8 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
             ) {
                 Text(
                         text = "Analytics",
-                        fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                        fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
+                        fontWeight = FontWeight.ExtraBold,
                         color = Color(0xFF1A1A1A),
                         fontSize = 30.sp,
                     )
@@ -122,7 +130,8 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
                 Text(
                     text = subject?.subject ?: "Loading...",
                     color = Color(0xFF6B7280),
-                    fontFamily = FontFamily(Font(R.font.plusjakartasansregular)),
+                    fontFamily = plusJak,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 18.sp,
                 )
             }
@@ -214,45 +223,102 @@ fun DateRangePickerDialog(
     onDismiss: () -> Unit,
     onRangeSelected: (LocalDate, LocalDate) -> Unit
 ) {
-    val state = rememberDateRangePickerState()
+    val state = rememberDateRangePickerState(
+        initialSelectedStartDateMillis = initialStart.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+        initialSelectedEndDateMillis = initialEnd.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+    )
     
+    val pickerColors = DatePickerDefaults.colors(
+        containerColor = Color.White,
+        titleContentColor = Color(0xFF6B7280),
+        headlineContentColor = Color(0xFF262626),
+        weekdayContentColor = Color(0xFF9CA3AF),
+        subheadContentColor = Color(0xFF262626),
+        yearContentColor = Color(0xFF262626),
+        currentYearContentColor = Color(0xFF262626),
+        selectedYearContainerColor = Color(0xFF262626),
+        selectedYearContentColor = Color.White,
+        dayContentColor = Color(0xFF1F2937),
+        disabledDayContentColor = Color.Gray.copy(alpha = 0.3f),
+        selectedDayContainerColor = Color(0xFF262626),
+        selectedDayContentColor = Color.White,
+        todayContentColor = Color(0xFF262626),
+        todayDateBorderColor = Color(0xFF262626),
+        dayInSelectionRangeContainerColor = Color(0xFF262626).copy(alpha = 0.1f),
+        dayInSelectionRangeContentColor = Color(0xFF262626),
+        dividerColor = Color.Transparent
+    )
+
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
-                val start = state.selectedStartDateMillis?.let { 
-                    java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                } ?: initialStart
-                val end = state.selectedEndDateMillis?.let { 
-                    java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-                } ?: initialEnd
-                onRangeSelected(start, end)
-            }) {
-                Text("OK",
-                    color = Color(0xFF262626),
+            Button(
+                onClick = {
+                    val start = state.selectedStartDateMillis?.let { 
+                        java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                    } ?: initialStart
+                    val end = state.selectedEndDateMillis?.let { 
+                        java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                    } ?: initialEnd
+                    onRangeSelected(start, end)
+                },
+                modifier = Modifier
+                    .padding(end = 16.dp, bottom = 12.dp)
+                    .height(44.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF262626)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Select Range",
+                    color = Color.White,
                     fontFamily = plusJak,
-                    fontWeight = FontWeight.Bold)
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
             }
         },
-        colors = DatePickerDefaults.colors(
-            containerColor = Color.White,
-            titleContentColor = Color.White,
-            dividerColor = Color(0xFF262626),
-            dayContentColor = Color.Black,
-            todayDateBorderColor = Color.Black,
-            selectedDayContentColor = Color.Black
-
-        ),
+        shape = RoundedCornerShape(28.dp),
+        colors = pickerColors,
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.padding(bottom = 12.dp, end = 8.dp)
+            ) {
                 Text("Cancel",
-                    color = Color(0xFF262626),
+                    color = Color(0xFF6B7280),
                     fontFamily = plusJak,
-                    fontWeight = FontWeight.Bold)
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
             }
         }
     ) {
-        DateRangePicker(state = state, modifier = Modifier.weight(1f))
+        Column(modifier = Modifier.padding(top = 16.dp)) {
+            DateRangePicker(
+                state = state,
+                modifier = Modifier.weight(1f),
+                colors = pickerColors,
+                title = {
+                    Text(
+                        text = "Filter by range",
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp),
+                        fontFamily = plusJak,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color(0xFF262626)
+                    )
+                },
+                headline = {
+                    DateRangePickerDefaults.DateRangePickerHeadline(
+                        selectedStartDateMillis = state.selectedStartDateMillis,
+                        selectedEndDateMillis = state.selectedEndDateMillis,
+                        displayMode = state.displayMode,
+                        dateFormatter = DatePickerDefaults.dateFormatter(),
+                        modifier = Modifier.padding(start = 24.dp, bottom = 12.dp,top = 5.dp)
+                    )
+                },
+                showModeToggle = false
+            )
+        }
     }
 }
 

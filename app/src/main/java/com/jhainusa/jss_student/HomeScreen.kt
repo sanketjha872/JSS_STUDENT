@@ -2,8 +2,11 @@ package com.jhainusa.jss_student
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,13 +32,15 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -70,6 +75,9 @@ fun FullPAge(
     val allAttendance by viewModel.getAllAttendance().observeAsState(emptyList())
 
     var showSubjectWiseDialog by remember { mutableStateOf(false) }
+    var showShareRundownCard by remember { mutableStateOf(false) }
+    var showShareSubjectCard by remember { mutableStateOf<SubjectAttendanceData?>(null) }
+    var capturedBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
 
     val currentDay = remember {
         LocalDate.now().dayOfWeek.name.lowercase()
@@ -153,7 +161,8 @@ fun FullPAge(
                 AttendanceOverview(
                     totalPercentage = "${attendanceData.first}%",
                     status = attendanceData.second,
-                    onTotalClick = { showSubjectWiseDialog = true }
+                    onTotalClick = { showSubjectWiseDialog = true },
+                    onLongClick = { showShareRundownCard = true }
                 )
             }
         }
@@ -168,7 +177,10 @@ fun FullPAge(
         AnimatedDialog(showDialog = showSubjectWiseDialog, onDismiss = { showSubjectWiseDialog = false }) {
             SubjectWiseAttendanceDialogContent(
                 attendanceList = subjectWiseAttendance,
-                onDismiss = { showSubjectWiseDialog = false }
+                onDismiss = { showSubjectWiseDialog = false },
+                onItemClick = { subject ->
+                    showShareSubjectCard = subject
+                }
             )
         }
     }
@@ -216,12 +228,14 @@ fun GreetingHeader(
     greeting: String,
     name: String?
 ) {
-    Text(
-        text = "$greeting\n$name",
-        fontSize = 30.sp,
-        color = Color(0xFF262626),
-        fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
-    )
+
+        Text(
+            text = "$greeting\n$name",
+            fontSize = 30.sp,
+            color = Color(0xFF262626),
+            fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
+        )
+
 }
 
 @Composable
@@ -343,11 +357,13 @@ fun classComp(
     Spacer(modifier = Modifier.height(15.dp))
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AttendanceOverview(
     totalPercentage: String,
     status: String,
-    onTotalClick: () -> Unit
+    onTotalClick: () -> Unit,
+    onLongClick: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -358,7 +374,12 @@ fun AttendanceOverview(
             totalPercentage,
             "Overall Score",
             Color(0XFFF8E9C8), // Light Yellowish
-            Modifier.weight(1f).clickable { onTotalClick() }
+            Modifier.weight(1f)
+                .clip(RoundedCornerShape(32.dp))
+                .combinedClickable(
+                    onClick = onTotalClick,
+                    onLongClick = onLongClick
+                )
         )
 
         AttendancePerBox(
@@ -421,10 +442,12 @@ fun AttendancePerBox(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SubjectWiseAttendanceDialogContent(
     attendanceList: List<SubjectAttendanceData>,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onItemClick: (SubjectAttendanceData) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -462,6 +485,10 @@ fun SubjectWiseAttendanceDialogContent(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
                             .background(item.color.copy(alpha = 0.3f))
+                            .combinedClickable(
+                                onClick = { /* Normal click can still open details if needed */ },
+                                onLongClick = { onItemClick(item) }
+                            )
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically

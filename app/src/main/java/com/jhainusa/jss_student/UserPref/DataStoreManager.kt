@@ -1,6 +1,7 @@
 package com.jhainusa.jss_student.UserPref
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -16,6 +17,7 @@ object UserPreferences {
     private val Context.dataStore by preferencesDataStore("user_prefs")
     private val NAME_KEY = stringPreferencesKey("user_name")
     private val USER_ID_KEY = stringPreferencesKey("user_id")
+    private val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
 
     suspend fun saveName(context: Context, name: String) {
         context.dataStore.edit { prefs ->
@@ -35,6 +37,17 @@ object UserPreferences {
     fun getName(context: Context): Flow<String?> {
         return context.dataStore.data
             .map { prefs -> prefs[NAME_KEY]}
+    }
+
+    fun getNotificationsEnabled(context: Context): Flow<Boolean> {
+        return context.dataStore.data
+            .map { prefs -> prefs[NOTIFICATIONS_ENABLED_KEY] ?: true }
+    }
+
+    suspend fun setNotificationsEnabled(context: Context, enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[NOTIFICATIONS_ENABLED_KEY] = enabled
+        }
     }
 
     suspend fun getOrCreateUserId(context: Context): String {
