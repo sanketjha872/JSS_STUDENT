@@ -82,10 +82,6 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
     val rangeAttendanceRate = if (totalClassesInRange > 0) (attendedClassesInRange.toDouble() / totalClassesInRange) else 0.0
     val rangeAttendanceRatePercent = (rangeAttendanceRate * 100).toInt()
 
-    var showShareCard by remember { mutableStateOf(false) }
-    var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    val context = LocalContext.current
-
 
     val predictionText: String
     val predictionTitle: String

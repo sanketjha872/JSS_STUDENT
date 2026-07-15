@@ -1,17 +1,13 @@
 package com.jhainusa.jss_student
 
 import android.annotation.SuppressLint
-import android.net.Uri
 import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,14 +18,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -45,11 +40,13 @@ import androidx.navigation.NavController
 import com.jhainusa.jss_student.RoomDatabase.DaySchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
+import com.jhainusa.jss_student.UserPref.UserPreferences
 import com.jhainusa.jss_student.ciaPaperPage.SBar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -68,7 +65,16 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
     var showAddSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    // Tooltip logic
+    var isTooltipVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        val shown = UserPreferences.isBunkTooltipShown(context).first()
+        if(!shown) isTooltipVisible = true
+    }
+
     var selectedSubjectForHistory by remember { mutableStateOf<Schedule?>(null) }
+
+
     var showHistoryDialog by remember { mutableStateOf(false) }
     var isEditMode by remember { mutableStateOf(false) }
     var isAiLoading by remember { mutableStateOf(false) }
@@ -82,7 +88,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
     LaunchedEffect(globalLazyListState) {
         snapshotFlow {
             globalLazyListState.firstVisibleItemIndex to globalLazyListState.firstVisibleItemScrollOffset
-        }.collectLatest { (index, offset) ->
+        }.collect { (index, offset) ->
             if (globalLazyListState.isScrollInProgress) {
                 if (index > previousFirstVisibleItemIndex) {
                     isBottomBarAndFabVisible = false
@@ -100,6 +106,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             previousFirstVisibleItemScrollOffset = offset
         }
     }
+
 
     val filteredList by remember(subjectsList, searchSubject) {
         derivedStateOf {
@@ -184,26 +191,56 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(filteredList) { sub ->
-                    SubjectCard(
-                        subname = sub.subject,
-                        teacher = sub.teacher,
-                        daysSchedule = sub.scheduleday,
-                        color = Color(sub.color.toULong()),
-                        isEditMode = isEditMode,
-                        onClick = {
-                            if (!isEditMode) {
-                                navController.navigate("bunk_analytics/${sub.subjectId}")
-                            }
-                        },
-                        onEditClick = {
-                            scheduleToEdit = sub
-                            showAddSheet = true
-                        },
-                        onDeleteClick = {
-                            viewModel.deleteSchedule(sub)
-                        }
+                    val isFirst = filteredList.indexOf(sub) == 0
+                    
+                    val transition = rememberInfiniteTransition(label = "pulse")
+                    val scale by transition.animateFloat(
+                        initialValue = 1f,
+                        targetValue = if (isFirst && isTooltipVisible) 1.02f else 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1000, easing = FastOutSlowInEasing),
+                            repeatMode = RepeatMode.Reverse
+                        ), label = "scale"
                     )
+
+                    Column(modifier = Modifier.scale(scale)) {
+                        if (isFirst && isTooltipVisible) {
+                            BunkTooltip(
+                                visible = isTooltipVisible,
+                                onDismiss = { 
+                                    isTooltipVisible = false
+                                    scope.launch { UserPreferences.setBunkTooltipShown(context) }
+                                },
+                                text = "Tap to see bunk analytics"
+                            )
+                        }
+
+                        SubjectCard(
+                            subname = sub.subject,
+                            teacher = sub.teacher,
+                            daysSchedule = sub.scheduleday,
+                            color = Color(sub.color.toULong()),
+                            isEditMode = isEditMode,
+                            onClick = {
+                                if (isTooltipVisible) {
+                                    isTooltipVisible = false
+                                    scope.launch { UserPreferences.setBunkTooltipShown(context) }
+                                }
+                                if (!isEditMode) {
+                                    navController.navigate("bunk_analytics/${sub.subjectId}")
+                                }
+                            },
+                            onEditClick = {
+                                scheduleToEdit = sub
+                                showAddSheet = true
+                            },
+                            onDeleteClick = {
+                                viewModel.deleteSchedule(sub)
+                            }
+                        )
+                    }
                 }
+
                 item { Spacer(modifier = Modifier.height(20.dp)) }
             }
         }

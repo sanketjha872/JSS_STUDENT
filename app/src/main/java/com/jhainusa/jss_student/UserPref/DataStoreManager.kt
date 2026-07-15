@@ -19,6 +19,10 @@ object UserPreferences {
     private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
 
+    private val BUNK_TOOLTIP_SHOWN_KEY = booleanPreferencesKey("bunk_tooltip_shown")
+    private val SWIPE_TOOLTIP_SHOWN_KEY = booleanPreferencesKey("swipe_tooltip_shown")
+
+
     suspend fun saveName(context: Context, name: String) {
         context.dataStore.edit { prefs ->
             prefs[NAME_KEY] = name
@@ -65,4 +69,23 @@ object UserPreferences {
             newId
         }
     }
+
+    // --- Bunk Tooltip Feature Discovery ---
+    fun isBunkTooltipShown(context: Context): Flow<Boolean> {
+        return context.dataStore.data.map { prefs -> prefs[BUNK_TOOLTIP_SHOWN_KEY] ?: false }
+    }
+
+    suspend fun setBunkTooltipShown(context: Context) {
+        context.dataStore.edit { prefs -> prefs[BUNK_TOOLTIP_SHOWN_KEY] = true }
+    }
+
+    // --- Swipe Tooltip Feature Discovery ---
+    fun isSwipeTooltipShown(context: Context): Flow<Boolean> {
+        return context.dataStore.data.map { prefs -> prefs[SWIPE_TOOLTIP_SHOWN_KEY] ?: false }
+    }
+
+    suspend fun setSwipeTooltipShown(context: Context) {
+        context.dataStore.edit { prefs -> prefs[SWIPE_TOOLTIP_SHOWN_KEY] = true }
+    }
 }
+

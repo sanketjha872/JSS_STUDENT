@@ -33,12 +33,14 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +56,8 @@ import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
 import com.jhainusa.jss_student.RoomDatabase.ClassSchedule
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import me.saket.swipe.SwipeAction
 import me.saket.swipe.SwipeableActionsBox
 import java.time.LocalDate
@@ -338,6 +342,15 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
     val schedules by viewModel.getAll().observeAsState(emptyList())
     val extraClasses by viewModel.getAllSchedulesForDate(selectedDate.toString()).observeAsState(emptyList())
     
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var showSwipeTooltip by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        val shown = com.jhainusa.jss_student.UserPref.UserPreferences.isSwipeTooltipShown(context).first()
+        if (!shown && schedules.isNotEmpty()) showSwipeTooltip = true
+    }
+    
     val selectedDayName = selectedDate.dayOfWeek.name.lowercase()
         .replaceFirstChar { it.uppercase() }.take(3)
 
@@ -378,48 +391,59 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
             }
         } else {
             items(combinedList) { item ->
-                when(item) {
-                    is TimelineItem.Regular -> {
-                        val dateStr = selectedDate.toString()
-                        val attendance by viewModel.getAttendanceForDate(item.schedule.subjectId, dateStr)
-                            .collectAsState(initial = null)
-                        
-                        ScheduleItemRow(
-                            schedule = item.schedule, 
-                            timing = item.timing,
-                            attendanceStatus = attendance?.attendanceStatus ?: 0,
-                            isExtra = false,
-                            onStatusChange = { newStatus ->
-                                viewModel.updateAttendance(
-                                    item.schedule.subjectId, 
-                                    dateStr, 
-                                    selectedDayName, 
-                                    newStatus
-                                )
-                                AnalyticsHelper.logEvent("update_attendance", android.os.Bundle().apply {
-                                    putString("subject", item.schedule.subject)
-                                    putInt("status", newStatus)
-                                    putBoolean("is_extra", false)
-                                })
-                            }
-                        )
-                    }
-                    is TimelineItem.Extra -> {
-                        if (item.parentSubject != null) {
+                Column {
+                    
+                    when(item) {
+                        is TimelineItem.Regular -> {
+                            val dateStr = selectedDate.toString()
+                            val attendance by viewModel.getAttendanceForDate(item.schedule.subjectId, dateStr)
+                                .collectAsState(initial = null)
+                            
                             ScheduleItemRow(
-                                schedule = item.parentSubject,
-                                timing = item.classSchedule.timing,
-                                attendanceStatus = item.classSchedule.attendanceStatus,
-                                isExtra = true,
+                                schedule = item.schedule, 
+                                timing = item.timing,
+                                attendanceStatus = attendance?.attendanceStatus ?: 0,
+                                isExtra = false,
                                 onStatusChange = { newStatus ->
-                                    viewModel.updateExtraClassAttendance(item.classSchedule.classId, newStatus)
+                                    if (showSwipeTooltip) {
+                                        showSwipeTooltip = false
+                                        scope.launch { com.jhainusa.jss_student.UserPref.UserPreferences.setSwipeTooltipShown(context) }
+                                    }
+                                    viewModel.updateAttendance(
+                                        item.schedule.subjectId, 
+                                        dateStr, 
+                                        selectedDayName, 
+                                        newStatus
+                                    )
                                     AnalyticsHelper.logEvent("update_attendance", android.os.Bundle().apply {
-                                        putString("subject", item.parentSubject.subject)
+                                        putString("subject", item.schedule.subject)
                                         putInt("status", newStatus)
-                                        putBoolean("is_extra", true)
+                                        putBoolean("is_extra", false)
                                     })
                                 }
                             )
+                        }
+                        is TimelineItem.Extra -> {
+                            if (item.parentSubject != null) {
+                                ScheduleItemRow(
+                                    schedule = item.parentSubject,
+                                    timing = item.classSchedule.timing,
+                                    attendanceStatus = item.classSchedule.attendanceStatus,
+                                    isExtra = true,
+                                    onStatusChange = { newStatus ->
+                                        if (showSwipeTooltip) {
+                                            showSwipeTooltip = false
+                                            scope.launch { com.jhainusa.jss_student.UserPref.UserPreferences.setSwipeTooltipShown(context) }
+                                        }
+                                        viewModel.updateExtraClassAttendance(item.classSchedule.classId, newStatus)
+                                        AnalyticsHelper.logEvent("update_attendance", android.os.Bundle().apply {
+                                            putString("subject", item.parentSubject.subject)
+                                            putInt("status", newStatus)
+                                            putBoolean("is_extra", true)
+                                        })
+                                    }
+                                )
+                            }
                         }
                     }
                 }
