@@ -63,6 +63,12 @@ val onboardingPages = listOf(
         imageRes = R.drawable.mark_attendance_with_swipe_gestures // Placeholder
     ),
     OnboardingPage(
+        title = "Bunk\nAnalytics",
+        description = "See you attendance summary and know if\nit's safe to bunk your next class.",
+        buttonText = "Continue",
+        imageRes = R.drawable.bunk_image // Placeholder
+    ),
+    OnboardingPage(
         title = "Smart\nNotifications",
         description = "Get timely notifications for your upcoming\nclasses and stay on track effortlessly.",
         buttonText = "Continue",
