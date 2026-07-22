@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -76,6 +77,8 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
 
 
     var showHistoryDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var subjectToDelete by remember { mutableStateOf<Schedule?>(null) }
     var isEditMode by remember { mutableStateOf(false) }
     var isAiLoading by remember { mutableStateOf(false) }
     var scheduleToEdit by remember { mutableStateOf<Schedule?>(null) }
@@ -192,7 +195,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             ) {
                 items(filteredList) { sub ->
                     val isFirst = filteredList.indexOf(sub) == 0
-                    
+
                     val transition = rememberInfiniteTransition(label = "pulse")
                     val scale by transition.animateFloat(
                         initialValue = 1f,
@@ -207,7 +210,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
                         if (isFirst && isTooltipVisible) {
                             BunkTooltip(
                                 visible = isTooltipVisible,
-                                onDismiss = { 
+                                onDismiss = {
                                     isTooltipVisible = false
                                     scope.launch { UserPreferences.setBunkTooltipShown(context) }
                                 },
@@ -235,7 +238,8 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
                                 showAddSheet = true
                             },
                             onDeleteClick = {
-                                viewModel.deleteSchedule(sub)
+                                subjectToDelete = sub
+                                showDeleteDialog = true
                             }
                         )
                     }
@@ -281,6 +285,60 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
                 )
             }
         }
+    }
+
+    if (showDeleteDialog && subjectToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+                subjectToDelete = null
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to delete the subject \"${subjectToDelete?.subject}\"?",
+                    fontFamily = plusJak,
+                    style = TextStyle(
+                        lineHeight = 24.sp,
+                        letterSpacing = 0.8.sp
+                    ),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        subjectToDelete?.let { viewModel.deleteSchedule(it) }
+                        showDeleteDialog = false
+                        subjectToDelete = null
+                    }
+                ) {
+                    Text(
+                        text = "Delete",
+                        color = Color(0xFFF13D3D),
+                        fontFamily = plusJak,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        subjectToDelete = null
+                    }
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = Color.Black,
+                        fontFamily = plusJak,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(24.dp)
+        )
     }
 
     if (showHistoryDialog && selectedSubjectForHistory != null) {
