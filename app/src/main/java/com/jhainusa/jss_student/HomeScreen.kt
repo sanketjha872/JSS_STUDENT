@@ -67,6 +67,9 @@ fun FullPAge(
     val nameFlow = remember { UserPreferences.getName(context) }
     val name by nameFlow.collectAsState(initial = null)
 
+    val desiredAttendanceFlow = remember { UserPreferences.getDesiredAttendance(context) }
+    val desiredAttendance by desiredAttendanceFlow.collectAsState(initial = 75f)
+
     androidx.compose.runtime.LaunchedEffect(Unit) {
         AnalyticsHelper.logScreenView("HomeScreen", "HomeScreen")
     }
@@ -84,7 +87,7 @@ fun FullPAge(
             .replaceFirstChar { it.uppercase() }.take(3) // "Mon", "Tue", etc.
     }
 
-    val attendanceData by remember(allAttendance) {
+    val attendanceData by remember(allAttendance, desiredAttendance) {
         derivedStateOf {
             val totalMarked = allAttendance.size
             val presentCount = allAttendance.count { it.attendanceStatus == 1 }
@@ -92,16 +95,16 @@ fun FullPAge(
 
             val status = when {
                 totalMarked == 0 -> "No data yet"
-                percentage >= 75 -> "Great job!"
-                percentage >= 60 -> "Getting close"
+                percentage >= desiredAttendance -> "Great job!"
+                percentage >= desiredAttendance * 0.8f -> "Getting close"
                 else -> "High Alert"
             }
 
             val greeting = when {
                 totalMarked == 0 -> "Welcome,"
                 percentage >= 90 -> "You're a Star,"
-                percentage >= 75 -> "Nice Streak,"
-                percentage >= 60 -> "Keep it up,"
+                percentage >= desiredAttendance -> "Nice Streak,"
+                percentage >= desiredAttendance * 0.8f -> "Keep it up,"
                 else -> "Stay Focused,"
             }
             Triple(percentage, status, greeting)
@@ -177,6 +180,7 @@ fun FullPAge(
         AnimatedDialog(showDialog = showSubjectWiseDialog, onDismiss = { showSubjectWiseDialog = false }) {
             SubjectWiseAttendanceDialogContent(
                 attendanceList = subjectWiseAttendance,
+                desiredAttendance = desiredAttendance,
                 onDismiss = { showSubjectWiseDialog = false },
                 onItemClick = { subject ->
                     showShareSubjectCard = subject
@@ -446,6 +450,7 @@ fun AttendancePerBox(
 @Composable
 fun SubjectWiseAttendanceDialogContent(
     attendanceList: List<SubjectAttendanceData>,
+    desiredAttendance: Float,
     onDismiss: () -> Unit,
     onItemClick: (SubjectAttendanceData) -> Unit
 ) {
@@ -514,7 +519,7 @@ fun SubjectWiseAttendanceDialogContent(
                             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 20.sp,
-                            color = if (item.percentage >= 75) Color(0xFF2E7D32) else Color(0xFFC62828)
+                            color = if (item.percentage >= desiredAttendance) Color(0xFF2E7D32) else Color(0xFFC62828)
                         )
                     }
                 }

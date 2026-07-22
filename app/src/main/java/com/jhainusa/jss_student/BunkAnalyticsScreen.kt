@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.RoomDatabase.ClassSchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
+import com.jhainusa.jss_student.UserPref.UserPreferences
 import android.graphics.Bitmap
 import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
@@ -47,8 +48,11 @@ import kotlin.math.ceil
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
+    val context = LocalContext.current
     val subject by viewModel.observeSchedule(subjectId).observeAsState()
     val attendanceHistory by viewModel.getAttendanceHistory(subjectId).observeAsState(emptyList())
+    val desiredAttendance by UserPreferences.getDesiredAttendance(context).collectAsState(initial = 75f)
+    val threshold = desiredAttendance / 100.0
 
     androidx.compose.runtime.LaunchedEffect(subjectId) {
         AnalyticsHelper.logScreenView("BunkAnalyticsScreen", "BunkAnalytics")
@@ -88,22 +92,22 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
     val predictionSubtitle: String
     val predictionColor: Color
 
-    if (rangeAttendanceRate >= 0.75) {
-        val maxBunks = if (totalClassesInRange > 0) ((attendedClassesInRange / 0.75) - totalClassesInRange).toInt() else 0
+    if (rangeAttendanceRate >= threshold) {
+        val maxBunks = if (totalClassesInRange > 0) ((attendedClassesInRange / threshold) - totalClassesInRange).toInt() else 0
         predictionTitle = "$maxBunks More"
         predictionSubtitle = "Safe bunks in range"
-        predictionText = "In this period, you could miss $maxBunks more classes to stay above 75%."
+        predictionText = "In this period, you could miss $maxBunks more classes to stay above ${desiredAttendance.toInt()}%."
         predictionColor = Color(0xFFFBE7D7)
     } else {
-        // formula: (attended + x) / (total + x) >= 0.75  => attended + x >= 0.75*total + 0.75*x => 0.25x >= 0.75*total - attended => x >= 3*total - 4*attended
+        // formula: (attended + x) / (total + x) >= threshold => attended + x >= threshold*total + threshold*x => (1-threshold)x >= threshold*total - attended => x >= (threshold*total - attended)/(1-threshold)
         val classesToAttend = if (totalClassesInRange > 0) {
-            ceil(3.0 * totalClassesInRange - 4.0 * attendedClassesInRange).toInt().coerceAtLeast(0)
+            ceil((threshold * totalClassesInRange - attendedClassesInRange) / (1.0 - threshold)).toInt().coerceAtLeast(0)
         } else {
             0
         }
         predictionTitle = "Next $classesToAttend"
         predictionSubtitle = "Needed in range"
-        predictionText = "To reach 75% for this period, you would need to attend $classesToAttend more classes."
+        predictionText = "To reach ${desiredAttendance.toInt()}% for this period, you would need to attend $classesToAttend more classes."
         predictionColor = Color(0xFFDBF8EB)
     }
 
@@ -803,8 +807,12 @@ fun FuturePredictionCard(predictionText: String) {
                     modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
+                val displayThreshold = remember(predictionText) {
+                    val match = """(\d+)%""".toRegex().find(predictionText)
+                    match?.groupValues?.get(1) ?: "75"
+                }
                 Text(
-                    text = "Threshold: 75%",
+                    text = "Threshold: $displayThreshold%",
                     fontSize = 12.sp,
                     color = Color.White,
                     fontFamily = plusJak

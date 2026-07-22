@@ -39,6 +39,7 @@ import com.jhainusa.jss_student.R
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.UserPref.NameViewModel
 import com.jhainusa.jss_student.plusJak
+import com.jhainusa.jss_student.UserPref.UserPreferences
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -135,7 +136,9 @@ fun OnboardingScreen(
                     .padding(top = 16.dp, end = 24.dp)
             ) {
                 TextButton(
-                    onClick = onSkip,
+                    onClick = {
+                        onSkip()
+                    },
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
                     Text(

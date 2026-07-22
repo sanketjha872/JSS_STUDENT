@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +47,7 @@ import com.jhainusa.jss_student.ciaPaperPage.PaperListScreen
 import com.jhainusa.jss_student.ciaPaperPage.Papers
 import com.jhainusa.jss_student.ciaPaperPage.Routes
 import com.jhainusa.jss_student.ciaPaperPage.SemesterListScreen
+import com.jhainusa.jss_student.onboarding.DesiredAttendanceScreen
 import com.jhainusa.jss_student.onboarding.OnboardingScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -77,6 +79,9 @@ class MainActivity : ComponentActivity() {
             UserSession.name = UserPreferences
                 .getName(this@MainActivity)
                 .first()
+            val onboardingCompleted = UserPreferences.isOnboardingCompleted(this@MainActivity).first()
+            val desiredAttendanceDone =
+                UserPreferences.isDesiredAttendanceDone(this@MainActivity).first()
 
         setContent {
             val context = LocalContext.current
@@ -106,13 +111,18 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+            val scope = rememberCoroutineScope()
             val navController = rememberAnimatedNavController()
 
+            val startDest = when {
+                UserSession.name.isNullOrEmpty() -> "name_input"
+                !onboardingCompleted -> "onboarding"
+                !desiredAttendanceDone -> "desired_attendance"
+                else -> "AllScreenNav"
+            }
+
             AnimatedNavHost(navController,
-                startDestination = if (UserSession.name.isNullOrEmpty())
-                    "name_input"
-                else
-                    "AllScreenNav",
+                startDestination = startDest,
                 modifier = Modifier.fillMaxSize(),
                 enterTransition = {
                     slideIntoContainer(
@@ -132,13 +142,28 @@ class MainActivity : ComponentActivity() {
                     OnboardingScreen(
                         viewModel = viewModel,
                         onFinish = {
-                            navController.navigate("AllScreenNav"){
-                                popUpTo("onboarding") { inclusive = true }
+                            scope.launch {
+                                UserPreferences.setOnboardingCompleted(context, true)
+                                navController.navigate("desired_attendance") {
+                                    popUpTo("onboarding") { inclusive = true }
+                                }
                             }
                         },
                         onSkip = {
-                            navController.navigate("AllScreenNav"){
-                                popUpTo("onboarding") { inclusive = true }
+                            scope.launch {
+                                UserPreferences.skipOnboarding(context)
+                                navController.navigate("AllScreenNav") {
+                                    popUpTo("onboarding") { inclusive = true }
+                                }
+                            }
+                        }
+                    )
+                }
+                composable("desired_attendance") {
+                    DesiredAttendanceScreen(
+                        onFinish = {
+                            navController.navigate("AllScreenNav") {
+                                popUpTo("desired_attendance") { inclusive = true }
                             }
                         }
                     )
