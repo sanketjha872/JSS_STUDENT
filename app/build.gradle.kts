@@ -11,13 +11,13 @@ plugins {
 
 android {
     namespace = "com.jhainusa.jss_student"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.jhainusa.jss_student"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 6
+        targetSdk = 36
+        versionCode = 8
         versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

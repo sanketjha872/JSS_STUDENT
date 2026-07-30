@@ -71,7 +71,7 @@ fun sendImageToSupabase(
                 }
             } else if (response.code() == 429) {
                 // Handle the 3-request limit reached
-                Toast.makeText(context, "Daily limit reached (3 request per day).Try next day", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Daily limit reached (2 request per day).Try next day", Toast.LENGTH_LONG).show()
                 onResult(false)
             } else {
                 onResult(false)

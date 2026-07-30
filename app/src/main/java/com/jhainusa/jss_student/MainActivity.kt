@@ -207,6 +207,10 @@ class MainActivity : ComponentActivity() {
                     BunkAnalyticsScreen(viewModel, subjectId)
                 }
 
+                composable(Routes.MORE_OPTIONS) {
+                    MoreOptionsScreen(onBackClick = { navController.popBackStack() })
+                }
+
                 composable(
                     route = "${Routes.PDF_LIST}/{yearId}/{semesterId}/{paperId}",
                     arguments = listOf(

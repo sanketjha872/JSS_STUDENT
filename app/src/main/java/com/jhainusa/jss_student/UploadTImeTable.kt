@@ -172,7 +172,8 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
                     DropdownMenuExample(
                         vIewModel = viewModel,
                         isEditMode = isEditMode,
-                        onEditModeToggle = { isEditMode = !isEditMode }
+                        onEditModeToggle = { isEditMode = !isEditMode },
+                        navController = navController
                     )
                 }
             }

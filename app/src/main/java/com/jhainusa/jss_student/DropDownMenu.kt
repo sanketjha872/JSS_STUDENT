@@ -17,7 +17,6 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Switch
-import androidx.compose.material.SwitchColors
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
@@ -26,7 +25,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,28 +36,28 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.jhainusa.jss_student.GeminiBackend.sendImageToSupabase
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.UserPref.NameViewModel
+import com.jhainusa.jss_student.ciaPaperPage.Routes
 
 @Composable
 fun DropdownMenuExample(
     vIewModel: MainVIewModel,
     isEditMode: Boolean,
     onEditModeToggle: () -> Unit,
-    nameViewModel: NameViewModel = viewModel() // Use NameViewModel to get userId
+    navController: NavController,
+    nameViewModel: NameViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val userId by nameViewModel.userIdFlow.collectAsState()
-    val notificationsEnabled by nameViewModel.notificationsEnabledFlow.collectAsState()
     var loading by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    var showNotificationDialog by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             loading = true
-            // Pass the real userId retrieved from DataStore
             sendImageToSupabase(
                 context = context,
                 uri = it,
@@ -132,10 +130,10 @@ fun DropdownMenuExample(
         }
         DropdownMenuItem(onClick = {
             expanded = false
-            showNotificationDialog = true
+            navController.navigate(Routes.MORE_OPTIONS)
         }) {
             Text(
-                text = "Alerts",
+                text = "More",
                 color = Color.Black,
                 fontSize = 15.sp,
                 fontFamily = plusJak,
@@ -143,53 +141,12 @@ fun DropdownMenuExample(
             )
             Spacer(modifier = Modifier.width(30.dp))
             Icon(
-                painter = painterResource(R.drawable.notification),
+                painter = painterResource(R.drawable.setting_2_svgrepo_com),
                 contentDescription = null,
                 tint = Color.Black,
                 modifier = Modifier.size(20.dp)
             )
         }
-    }
-
-    if (showNotificationDialog) {
-        AlertDialog(
-            onDismissRequest = { showNotificationDialog = false },
-            title = {
-                Text(
-                    text = "Notifications",
-                    fontFamily = plusJak,
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-            },
-            text = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (notificationsEnabled) "Notifications are ON" else "Notifications are OFF",
-                        modifier = Modifier.weight(1f),
-                        fontFamily = plusJak,
-                        fontSize = 15.sp,
-                        color = Color.Gray
-                    )
-                    Switch(
-                        checked = notificationsEnabled,
-                        colors = SwitchDefaults.colors(Color(0xBE797979)),
-                        onCheckedChange = { nameViewModel.setNotificationsEnabled(it) },
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showNotificationDialog = false }) {
-                    Text("Done", fontFamily = plusJak, color = Color.Black)
-                }
-            },
-            shape = RoundedCornerShape(18.dp)
-        )
     }
 
     if (loading) {

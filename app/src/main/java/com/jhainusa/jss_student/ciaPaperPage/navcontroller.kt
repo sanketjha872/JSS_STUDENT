@@ -16,4 +16,5 @@ object Routes {
     const val PAPER_LIST = "papers"
     const val PDF_LIST = "pdfs"
     const val BUNK_ANALYTICS = "bunk_analytics/{subjectId}"
+    const val MORE_OPTIONS = "more_options"
 }

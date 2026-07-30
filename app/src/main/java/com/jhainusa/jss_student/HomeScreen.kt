@@ -1,5 +1,6 @@
 package com.jhainusa.jss_student
 
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -10,6 +11,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -39,11 +42,14 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
@@ -232,7 +238,12 @@ fun GreetingHeader(
     greeting: String,
     name: String?
 ) {
-
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Text(
             text = "$greeting\n$name",
             fontSize = 30.sp,
@@ -240,6 +251,39 @@ fun GreetingHeader(
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
         )
 
+        Button(
+            onClick = {
+                AnalyticsHelper.logEvent("invite_friends")
+                val sendIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(
+                        Intent.EXTRA_TEXT,
+                        "Hey, check out this cool app to manage your attendance: https://play.google.com/store/apps/details?id=${context.packageName}"
+                    )
+                    type = "text/plain"
+                }
+                context.startActivity(Intent.createChooser(sendIntent, "Share via"))
+
+            },
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFF5F4F4),
+                contentColor = Color.Black
+            ),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.add_plus_svgrepo_com),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Invite\nFriends",
+                color = Color(0xFF262626),
+                fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp)
+        }
+    }
 }
 
 @Composable

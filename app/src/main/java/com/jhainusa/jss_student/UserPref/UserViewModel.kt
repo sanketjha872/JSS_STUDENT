@@ -54,4 +54,22 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    fun sendFeedback(type: String, message: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val userId = UserPreferences.getOrCreateUserId(context)
+                val feedback = Feedback(
+                    userId = userId,
+                    type = type,
+                    message = message
+                )
+                supabase.from("feedback").insert(feedback)
+                onSuccess()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onError(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
 }

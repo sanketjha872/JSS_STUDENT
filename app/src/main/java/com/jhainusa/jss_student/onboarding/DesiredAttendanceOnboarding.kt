@@ -1,6 +1,5 @@
 package com.jhainusa.jss_student.onboarding
 
-import android.view.WindowInsets
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -25,7 +23,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -38,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jhainusa.jss_student.UserPref.UserPreferences
 import com.jhainusa.jss_student.ui.theme.AccentBlue
+import com.jhainusa.jss_student.ui.theme.JSS_STUDENTTheme
 import com.jhainusa.jss_student.ui.theme.NavyText
 import com.jhainusa.jss_student.ui.theme.PlusJakartaSans
 import com.jhainusa.jss_student.ui.theme.SubtitleGray
@@ -62,6 +60,7 @@ private val LABEL_GAP = 20.dp         // gap between tallest tick and its number
 private const val RUBBER_BAND_FACTOR = 0.3f  // resistance when dragging past min/max
 
 
+
 @Composable
 fun DesiredAttendanceScreen(onFinish: () -> Unit) {
     val minWeight = 0f
@@ -79,7 +78,7 @@ fun DesiredAttendanceScreen(onFinish: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(64.dp))
+            Spacer(Modifier.weight(1f))
 
             Text(
                 text = "Your Attendance Goal",
@@ -99,7 +98,7 @@ fun DesiredAttendanceScreen(onFinish: () -> Unit) {
             )
 
 
-            Spacer(Modifier.height(64.dp))
+            Spacer(Modifier.weight(1f))
 
             Row(
                 verticalAlignment = Alignment.Bottom,
@@ -123,7 +122,7 @@ fun DesiredAttendanceScreen(onFinish: () -> Unit) {
                 )
             }
 
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.weight(1f))
 
             SlidingWeightRuler(
                 value = desiredAttendance,
@@ -134,10 +133,11 @@ fun DesiredAttendanceScreen(onFinish: () -> Unit) {
                 unitWidth = 45.dp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(RULER_HEIGHT)
+                    .heightIn(max = RULER_HEIGHT)
+                    .weight(2f, fill = false)
             )
 
-            Spacer(Modifier.height(56.dp))
+            Spacer(Modifier.weight(1f))
 
             Text(
                 text = "My college want %.1f".format(desiredAttendance) + "%\nattendance from me",
@@ -368,5 +368,13 @@ private fun SlidingWeightRuler(
                 cap = StrokeCap.Round
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DesiredAttendanceScreenPreview() {
+    JSS_STUDENTTheme {
+        DesiredAttendanceScreen(onFinish = {})
     }
 }
