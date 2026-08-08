@@ -1,6 +1,7 @@
 package com.jhainusa.jss_student.UserPref
 
 import android.content.Context
+import android.provider.Settings
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -32,14 +33,8 @@ object UserPreferences {
         context.dataStore.edit { prefs ->
             prefs[NAME_KEY] = name
 
-            // Prepend name to the existing UUID or generate a new one
-            val currentId = prefs[USER_ID_KEY]
-            val uuid = if (currentId != null && currentId.contains("_")) {
-                currentId.substringAfter("_")
-            } else {
-                UUID.randomUUID().toString()
-            }
-            prefs[USER_ID_KEY] = "${name}_$uuid"
+            val deviceId = getHardwareId(context)
+            prefs[USER_ID_KEY] = "${deviceId}"
         }
     }
 
@@ -58,7 +53,9 @@ object UserPreferences {
             prefs[NOTIFICATIONS_ENABLED_KEY] = enabled
         }
     }
-
+    private fun getHardwareId(context: Context): String {
+        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: UUID.randomUUID().toString()
+    }
     suspend fun getOrCreateUserId(context: Context): String {
         val prefs = context.dataStore.data.first()
         val existingId = prefs[USER_ID_KEY]
@@ -66,8 +63,8 @@ object UserPreferences {
         return if (existingId != null) {
             existingId
         } else {
-            val name = prefs[NAME_KEY] ?: "Unknown"
-            val newId = "${name}_${UUID.randomUUID()}"
+            val deviceId = getHardwareId(context)
+            val newId = "${deviceId}"
             context.dataStore.edit { settings ->
                 settings[USER_ID_KEY] = newId
             }

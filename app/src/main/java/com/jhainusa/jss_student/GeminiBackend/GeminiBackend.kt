@@ -24,6 +24,7 @@ fun sendImageToSupabase(
     context: Context,
     uri: Uri,
     userIdStr: String,
+    username : String,
     viewModel: MainVIewModel,
     onResult: (Boolean) -> Unit
 ) {
@@ -33,7 +34,7 @@ fun sendImageToSupabase(
     val requestBody = bytes.toRequestBody("image/jpeg".toMediaType())
     val imagePart = MultipartBody.Part.createFormData("image", "timetable.jpg", requestBody)
 
-    SupabaseClient.api.sendTimetable(userIdStr, imagePart).enqueue(object : Callback<String> {
+    SupabaseClient.api.sendTimetable(userIdStr, username,imagePart).enqueue(object : Callback<String> {
         override fun onResponse(call: Call<String>, response: Response<String>) {
             if (response.isSuccessful && response.body() != null) {
                 try {

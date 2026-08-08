@@ -17,7 +17,7 @@ android {
         applicationId = "com.jhainusa.jss_student"
         minSdk = 24
         targetSdk = 36
-        versionCode = 8
+        versionCode = 9
         versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

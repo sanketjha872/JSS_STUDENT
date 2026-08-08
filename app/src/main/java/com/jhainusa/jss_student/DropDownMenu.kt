@@ -52,6 +52,7 @@ fun DropdownMenuExample(
 ) {
     val context = LocalContext.current
     val userId by nameViewModel.userIdFlow.collectAsState()
+    val username by nameViewModel.nameFlow.collectAsState()
     var loading by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
 
@@ -62,6 +63,7 @@ fun DropdownMenuExample(
                 context = context,
                 uri = it,
                 userIdStr = userId ?: "unknown_user",
+                username = username ?: "unknown_name",
                 viewModel = vIewModel
             ) { success ->
                 loading = false

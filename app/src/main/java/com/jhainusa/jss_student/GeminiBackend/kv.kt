@@ -21,6 +21,7 @@ interface SupabaseApiService {
     @POST("super-action")
     fun sendTimetable(
         @Part("user_id") userId: String, // Changed from RequestBody to String
+        @Part("username") username: String?,
         @Part image: MultipartBody.Part
     ): Call<String>
 }

@@ -64,7 +64,7 @@ import com.jhainusa.jss_student.ui.theme.black1a
 @Composable
 fun MoreOptionsScreen(
     nameViewModel: NameViewModel = viewModel(),
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
 ) {
     val notificationsEnabled by nameViewModel.notificationsEnabledFlow.collectAsState()
     var showFeedbackDialog by remember { mutableStateOf(false) }
@@ -142,7 +142,7 @@ fun MoreOptionsScreen(
                             )
                         }
                     ),
-                    bgColor = Color(0xFFF0FBF5)
+                    bgColor = Color(0xFFDFF7EC).copy(alpha = 0.7f)
                 )
             }
 
@@ -171,7 +171,7 @@ fun MoreOptionsScreen(
                             context.startActivity(Intent.createChooser(shareIntent, "Share Schedo via"))
                         })
                     ),
-                    bgColor = Color(0xFFFCF1F1)
+                    bgColor = Color(0xFFFFE6E6).copy(alpha = 0.7f)
                 )
             }
             item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -285,7 +285,7 @@ fun PremiumCard() {
                 Toast.makeText(context, "Premium features coming soon!", Toast.LENGTH_SHORT).show()
             },
         shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFEDF3F8),
+        color = Color(0xFFE0ECF5),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),

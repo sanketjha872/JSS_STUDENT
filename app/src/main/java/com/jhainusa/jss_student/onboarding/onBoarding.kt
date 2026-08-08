@@ -95,6 +95,7 @@ fun OnboardingScreen(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val userId by nameViewModel.userIdFlow.collectAsState()
+    val username by nameViewModel.nameFlow.collectAsState()
     var loading by remember { mutableStateOf(false) }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -109,7 +110,8 @@ fun OnboardingScreen(
                     context = context,
                     uri = it,
                     userIdStr = userId ?: "unknown_user",
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    username = username ?: "unknown_name"
                 ) { success ->
                     loading = false
                     if (success) {
