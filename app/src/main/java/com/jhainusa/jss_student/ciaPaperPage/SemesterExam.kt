@@ -21,6 +21,7 @@ import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,23 +62,24 @@ fun SemesterListScreen(
     when{
         semesters == null -> {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.DarkGray, strokeCap = StrokeCap.Round)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onBackground, strokeCap = StrokeCap.Round)
             }
         }
         semesters!!.isEmpty() -> {
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().background(Color.White)
             ) {
                 LottieLoader("",R.raw.coming_soon)
             }
         }
         else -> {
-            LazyColumn(modifier = Modifier.fillMaxSize().statusBarsPadding().
+            LazyColumn(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding().
             padding(horizontal = 16.dp)) {
                 items(semesters!!) { semId ->
                     Row(

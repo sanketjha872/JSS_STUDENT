@@ -38,7 +38,9 @@ import com.jhainusa.jss_student.RoomDatabase.ClassSchedule
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.RoomDatabase.Schedule
 import com.jhainusa.jss_student.UserPref.UserPreferences
+import com.jhainusa.jss_student.ui.theme.JSS_STUDENTTheme
 import android.graphics.Bitmap
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.platform.LocalContext
 import java.time.LocalDate
 import java.time.YearMonth
@@ -52,7 +54,6 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
     val subject by viewModel.observeSchedule(subjectId).observeAsState()
     val attendanceHistory by viewModel.getAttendanceHistory(subjectId).observeAsState(emptyList())
     val desiredAttendance by UserPreferences.getDesiredAttendance(context).collectAsState(initial = 75f)
-    val threshold = desiredAttendance / 100.0
 
     androidx.compose.runtime.LaunchedEffect(subjectId) {
         AnalyticsHelper.logScreenView("BunkAnalyticsScreen", "BunkAnalytics")
@@ -62,6 +63,22 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
             })
         }
     }
+
+    BunkAnalyticsContent(
+        subject = subject,
+        attendanceHistory = attendanceHistory,
+        desiredAttendance = desiredAttendance
+    )
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun BunkAnalyticsContent(
+    subject: Schedule?,
+    attendanceHistory: List<ClassSchedule>,
+    desiredAttendance: Float
+) {
+    val threshold = desiredAttendance / 100.0
 
     val minDate = remember(attendanceHistory) {
         attendanceHistory.mapNotNull {
@@ -116,20 +133,20 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(start = 20.dp, end = 20.dp, bottom = 20.dp)
             ) {
                 Text(
                         text = "Analytics",
                         fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF1A1A1A),
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 30.sp,
                     )
                 Spacer(modifier = Modifier.height(9.dp))
                 Text(
                     text = subject?.subject ?: "Loading...",
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontFamily = plusJak,
                     fontWeight = FontWeight.Normal,
                     fontSize = 18.sp,
@@ -137,7 +154,7 @@ fun BunkAnalyticsScreen(viewModel: MainVIewModel, subjectId: Int) {
             }
         },
         modifier = Modifier.background(Color.White).statusBarsPadding(),
-        containerColor = Color.White,
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -229,23 +246,23 @@ fun DateRangePickerDialog(
     )
     
     val pickerColors = DatePickerDefaults.colors(
-        containerColor = Color.White,
-        titleContentColor = Color(0xFF6B7280),
-        headlineContentColor = Color(0xFF262626),
-        weekdayContentColor = Color(0xFF9CA3AF),
-        subheadContentColor = Color(0xFF262626),
-        yearContentColor = Color(0xFF262626),
-        currentYearContentColor = Color(0xFF262626),
-        selectedYearContainerColor = Color(0xFF262626),
-        selectedYearContentColor = Color.White,
-        dayContentColor = Color(0xFF1F2937),
+        containerColor = MaterialTheme.colorScheme.background,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        headlineContentColor = MaterialTheme.colorScheme.onBackground,
+        weekdayContentColor = MaterialTheme.colorScheme.tertiary,
+        subheadContentColor = MaterialTheme.colorScheme.onBackground,
+        yearContentColor = MaterialTheme.colorScheme.onBackground,
+        currentYearContentColor = MaterialTheme.colorScheme.onBackground,
+        selectedYearContainerColor = MaterialTheme.colorScheme.onBackground,
+        selectedYearContentColor = MaterialTheme.colorScheme.background,
+        dayContentColor = MaterialTheme.colorScheme.tertiary,
         disabledDayContentColor = Color.Gray.copy(alpha = 0.3f),
-        selectedDayContainerColor = Color(0xFF262626),
-        selectedDayContentColor = Color.White,
-        todayContentColor = Color(0xFF262626),
-        todayDateBorderColor = Color(0xFF262626),
-        dayInSelectionRangeContainerColor = Color(0xFF262626).copy(alpha = 0.1f),
-        dayInSelectionRangeContentColor = Color(0xFF262626),
+        selectedDayContainerColor = MaterialTheme.colorScheme.onBackground,
+        selectedDayContentColor = MaterialTheme.colorScheme.background,
+        todayContentColor = MaterialTheme.colorScheme.onBackground,
+        todayDateBorderColor = MaterialTheme.colorScheme.onBackground,
+        dayInSelectionRangeContainerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f),
+        dayInSelectionRangeContentColor = MaterialTheme.colorScheme.onBackground,
         dividerColor = Color.Transparent
     )
 
@@ -265,11 +282,11 @@ fun DateRangePickerDialog(
                 modifier = Modifier
                     .padding(end = 16.dp, bottom = 12.dp)
                     .height(44.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF262626)),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onBackground),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text("Select Range",
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.background,
                     fontFamily = plusJak,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
@@ -284,7 +301,7 @@ fun DateRangePickerDialog(
                 modifier = Modifier.padding(bottom = 12.dp, end = 8.dp)
             ) {
                 Text("Cancel",
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontFamily = plusJak,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
@@ -304,7 +321,7 @@ fun DateRangePickerDialog(
                         fontFamily = plusJak,
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
-                        color = Color(0xFF262626)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 },
                 headline = {
@@ -329,7 +346,7 @@ fun AttendanceCalendarCard(
     startDate: LocalDate,
     endDate: LocalDate
 ) {
-    val accentColor = Color(0xFF262626)
+    val accentColor = MaterialTheme.colorScheme.onSurface
     var currentMonth by remember(endDate) { mutableStateOf(YearMonth.from(endDate)) }
     
     val attendanceMap = attendanceHistory.associateBy { it.date }
@@ -337,7 +354,7 @@ fun AttendanceCalendarCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -362,7 +379,7 @@ fun AttendanceCalendarCard(
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = plusJak,
-                color = Color(0xFF262626)
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
             }
@@ -403,7 +420,7 @@ fun AttendanceCalendarCard(
                 Text(
                     text = day,
                     fontSize = 12.sp,
-                    color = Color.DarkGray,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     fontFamily = plusJak,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
@@ -468,8 +485,8 @@ fun AttendanceCalendarCard(
 
                             val targetTextColor = when {
                                 attendance != null -> Color.White
-                                !isWithinRange -> Color.LightGray.copy(alpha = 0.8f)
-                                else -> Color(0xFF4B5563)
+                                !isWithinRange -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+                                else -> MaterialTheme.colorScheme.tertiary
                             }
                             val animatedTextColor by animateColorAsState(
                                 targetValue = targetTextColor,
@@ -517,7 +534,7 @@ fun RangeSummarySection(rate: String, attended: String, missed: String, total: S
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFF3F4F6))
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .clickable { onEditRange() }
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -528,14 +545,14 @@ fun RangeSummarySection(rate: String, attended: String, missed: String, total: S
                     Icons.Default.DateRange,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = Color.Gray
+                    tint = MaterialTheme.colorScheme.tertiary
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = dateRangeText,
                     fontSize = 14.sp,
                     fontFamily = plusJak,
-                    color = Color(0xFF4B5563)
+                    color = MaterialTheme.colorScheme.tertiary
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -544,14 +561,14 @@ fun RangeSummarySection(rate: String, attended: String, missed: String, total: S
                     fontSize = 14.sp,
                     fontFamily = plusJak,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    color = MaterialTheme.colorScheme.tertiary
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     Icons.Default.Edit,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = Color.Black
+                    tint = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
@@ -563,7 +580,7 @@ fun RangeSummarySection(rate: String, attended: String, missed: String, total: S
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = plusJak,
-            color = Color(0xFF4B5563),
+            color = MaterialTheme.colorScheme.onSurface,
             letterSpacing = 1.sp,
             modifier = Modifier.padding(horizontal = 4.dp)
         )
@@ -623,8 +640,8 @@ fun DateRangeFilterPresets(
     ) {
         options.forEach { (label, start) ->
             val isSelected = currentStart == start && currentEnd == today
-            val animatedColor by animateColorAsState(if (isSelected) Color(0xFF262626) else Color(0xFFF3F4F6))
-            val animatedContentColor by animateColorAsState(if (isSelected) Color.White else Color.Gray)
+            val animatedColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primaryContainer)
+            val animatedContentColor by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.tertiary)
             
             Surface(
                 onClick = { onRangeSelected(start, today) },
@@ -754,21 +771,21 @@ fun FuturePredictionCard(predictionText: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(PrimaryColor)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(24.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.Outlined.Lightbulb,
                 contentDescription = null,
-                tint = Color.Gray,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Future Prediction",
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontFamily = plusJak
             )
         }
@@ -786,7 +803,7 @@ fun FuturePredictionCard(predictionText: String) {
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = plusJak,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 lineHeight = 28.sp
             )
         }
@@ -796,14 +813,14 @@ fun FuturePredictionCard(predictionText: String) {
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.2f))
+                .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f))
                 .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     Icons.Outlined.Info,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.size(14.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -814,7 +831,7 @@ fun FuturePredictionCard(predictionText: String) {
                 Text(
                     text = "Threshold: $displayThreshold%",
                     fontSize = 12.sp,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontFamily = plusJak
                 )
             }
@@ -827,11 +844,46 @@ fun FuturePredictionCard(predictionText: String) {
 @Preview(showBackground = true)
 @Composable
 fun DateRangePickerDialogPreview() {
+    JSS_STUDENTTheme {
         DateRangePickerDialog(
             initialStart = LocalDate.now(),
             initialEnd = LocalDate.now().plusDays(7),
             onDismiss = {},
             onRangeSelected = { _, _ -> }
         )
+    }
 }
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true)
+@Composable
+fun BunkAnalyticsPreview() {
+    JSS_STUDENTTheme {
+        val sampleSubject = Schedule(
+            subjectId = 1,
+            subject = "Data Structures",
+            teacher = "Dr. Jain",
+            scheduleday = emptyList(),
+            color = 0xFFBB86FC,
+            totalClasses = 10
+        )
+        val today = LocalDate.now()
+        val sampleAttendance = listOf(
+            ClassSchedule(subjectOwnerId = 1, date = today.minusDays(1).toString(), attendanceStatus = 1, day = "Monday"),
+            ClassSchedule(subjectOwnerId = 1, date = today.minusDays(2).toString(), attendanceStatus = 2, day = "Sunday"),
+            ClassSchedule(subjectOwnerId = 1, date = today.minusDays(3).toString(), attendanceStatus = 1, day = "Saturday"),
+            ClassSchedule(subjectOwnerId = 1, date = today.minusDays(4).toString(), attendanceStatus = 1, day = "Friday"),
+            ClassSchedule(subjectOwnerId = 1, date = today.minusDays(5).toString(), attendanceStatus = 1, day = "Thursday"),
+            ClassSchedule(subjectOwnerId = 1, date = today.minusDays(6).toString(), attendanceStatus = 2, day = "Wednesday")
+        )
+        Surface(color = MaterialTheme.colorScheme.background) {
+            BunkAnalyticsContent(
+                subject = sampleSubject,
+                attendanceHistory = sampleAttendance,
+                desiredAttendance = 75f
+            )
+        }
+    }
+}
+
 

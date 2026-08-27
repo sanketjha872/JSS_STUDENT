@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -77,7 +78,7 @@ fun TimeTable(vIewModel : MainVIewModel){
     }
 
     Column(
-        modifier=  Modifier.fillMaxSize()
+        modifier=  Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .padding(vertical = 20.dp),
         verticalArrangement = Arrangement.Absolute.spacedBy(9.dp),
         horizontalAlignment = Alignment.Start
@@ -89,7 +90,7 @@ fun TimeTable(vIewModel : MainVIewModel){
             Text(
                 text = "Time Table",
                 fontSize = 30.sp,
-                color = Color(0xFF262626),
+                color = MaterialTheme.colorScheme.onBackground,
                 fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 modifier = Modifier.weight(1f)
             )
@@ -97,12 +98,12 @@ fun TimeTable(vIewModel : MainVIewModel){
                 onClick = { showExtraClassSheet = true },
                 modifier = Modifier
                     .clip(CircleShape)
-                    .background(Color(0xFF262626))
+                    .background(MaterialTheme.colorScheme.onBackground)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Extra Class",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.background,
                 )
             }
         }
@@ -129,7 +130,7 @@ fun TimeTable(vIewModel : MainVIewModel){
         ModalBottomSheet(
             onDismissRequest = { showExtraClassSheet = false },
             sheetState = sheetState,
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.background,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
             AddExtraClassBottomSheet(
@@ -166,7 +167,7 @@ fun AddExtraClassBottomSheet(
             fontFamily = plusJak,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = PrimaryColor
+            color = MaterialTheme.colorScheme.onBackground
         )
         Text(
             text = "For $selectedDate",
@@ -186,8 +187,8 @@ fun AddExtraClassBottomSheet(
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (selectedSubject == subject) PrimaryColor.copy(0.1f) else Color.Transparent)
-                        .border(1.dp, if (selectedSubject == subject) PrimaryColor else OutlineColor, RoundedCornerShape(12.dp))
+                        .background(if (selectedSubject == subject) MaterialTheme.colorScheme.onBackground.copy(0.1f) else Color.Transparent)
+                        .border(1.dp, if (selectedSubject == subject) MaterialTheme.colorScheme.onBackground.copy(0.1f) else OutlineColor, RoundedCornerShape(12.dp))
                         .clickable { selectedSubject = subject }
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -246,9 +247,9 @@ fun AddExtraClassBottomSheet(
             enabled = selectedSubject != null,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = androidx.compose.material.ButtonDefaults.buttonColors(backgroundColor = PrimaryColor, contentColor = Color.White)
+            colors = androidx.compose.material.ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colorScheme.onBackground, contentColor = MaterialTheme.colorScheme.background)
         ) {
-            Text("Add Class", fontFamily = plusJak, fontWeight = FontWeight.Bold, color = Color.White)
+            Text("Add Class", fontFamily = plusJak, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.background)
         }
         Spacer(modifier = Modifier.height(24.dp))
     }
@@ -287,7 +288,7 @@ fun MonthChangeUi(
             modifier = Modifier.fillMaxWidth()
                 .padding(horizontal = 15.dp)
                 .clip(RoundedCornerShape(13.dp))
-                .background(Color(247,247,247,1).copy(1f))
+                .background(MaterialTheme.colorScheme.surface)
                 .border(1.dp,
                     Color.LightGray.copy(0.4f),
                     RoundedCornerShape(13.dp)),
@@ -303,13 +304,13 @@ fun MonthChangeUi(
                     tint = Color.Gray,
                     modifier = Modifier
                         .clip(RoundedCornerShape(7.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.background)
                         .border(0.5.dp,Color.LightGray,RoundedCornerShape(7.dp))
                 )
             }
             Text(
                 text = "${currentMonth.month.name.lowercase().replaceFirstChar { it.uppercase() } +" "} ${ currentMonth.year}",
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurface,
                 fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
                 fontSize = 18.sp,
             )
@@ -322,7 +323,7 @@ fun MonthChangeUi(
                     tint = Color.Gray,
                     modifier = Modifier
                         .clip(RoundedCornerShape(7.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.background)
                         .border(0.5.dp,Color.LightGray,RoundedCornerShape(7.dp))
                 )
             }
@@ -356,19 +357,30 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
 
     val combinedList by remember(schedules, extraClasses, selectedDayName) {
         derivedStateOf {
-            val regular = schedules.flatMap { schedule ->
+            // 1. Get all classes that have an entry in the database for this date (Marked Regular & Extras)
+            val markedItems = extraClasses.map { classSchedule ->
+                val parentSubject = schedules.find { it.subjectId == classSchedule.subjectOwnerId }
+                TimelineItem.Extra(classSchedule, parentSubject)
+            }
+            
+            // 2. Get regular classes from the current schedule template that HAVEN'T been marked yet
+            val unmarkedRegular = schedules.flatMap { schedule ->
                 schedule.scheduleday
                     .filter { it.day.startsWith(selectedDayName, ignoreCase = true) }
+                    .filter { daySchedule ->
+                        // Only add if there isn't already a record in the database for this subject and timing
+                        extraClasses.none { 
+                            it.subjectOwnerId == schedule.subjectId && 
+                            it.timing == daySchedule.timing && 
+                            !it.isExtra 
+                        }
+                    }
                     .map { daySchedule -> 
                         TimelineItem.Regular(schedule, daySchedule.timing)
                     }
             }
-            val extras = extraClasses.filter { it.isExtra }.map { extra ->
-                val parentSubject = schedules.find { it.subjectId == extra.subjectOwnerId }
-                TimelineItem.Extra(extra, parentSubject)
-            }
             
-            (regular + extras).sortedBy { item ->
+            (markedItems + unmarkedRegular).sortedBy { item ->
                 val t = when(item) {
                     is TimelineItem.Regular -> item.timing
                     is TimelineItem.Extra -> item.classSchedule.timing
@@ -380,29 +392,24 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
     ) {
         if (combinedList.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
-                    Text("No classes today", color = Color.Gray, fontFamily = plusJak)
+                    Text("No classes today", color = MaterialTheme.colorScheme.onBackground.copy(0.65f), fontFamily = plusJak)
                 }
             }
         } else {
             items(combinedList) { item ->
                 Column {
-                    
                     when(item) {
                         is TimelineItem.Regular -> {
-                            val dateStr = selectedDate.toString()
-                            val attendance by viewModel.getAttendanceForDate(item.schedule.subjectId, dateStr)
-                                .collectAsState(initial = null)
-                            
                             ScheduleItemRow(
                                 schedule = item.schedule, 
                                 timing = item.timing,
-                                attendanceStatus = attendance?.attendanceStatus ?: 0,
+                                attendanceStatus = 0, // Unmarked
                                 isExtra = false,
                                 onStatusChange = { newStatus ->
                                     if (showSwipeTooltip) {
@@ -411,9 +418,10 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
                                     }
                                     viewModel.updateAttendance(
                                         item.schedule.subjectId, 
-                                        dateStr, 
+                                        selectedDate.toString(), 
                                         selectedDayName, 
-                                        newStatus
+                                        newStatus,
+                                        item.timing
                                     )
                                     AnalyticsHelper.logEvent("update_attendance", android.os.Bundle().apply {
                                         putString("subject", item.schedule.subject)
@@ -429,17 +437,29 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
                                     schedule = item.parentSubject,
                                     timing = item.classSchedule.timing,
                                     attendanceStatus = item.classSchedule.attendanceStatus,
-                                    isExtra = true,
+                                    isExtra = item.classSchedule.isExtra,
                                     onStatusChange = { newStatus ->
                                         if (showSwipeTooltip) {
                                             showSwipeTooltip = false
                                             scope.launch { com.jhainusa.jss_student.UserPref.UserPreferences.setSwipeTooltipShown(context) }
                                         }
-                                        viewModel.updateExtraClassAttendance(item.classSchedule.classId, newStatus)
+                                        
+                                        if (item.classSchedule.isExtra) {
+                                            viewModel.updateExtraClassAttendance(item.classSchedule.classId, newStatus)
+                                        } else {
+                                            viewModel.updateAttendance(
+                                                item.classSchedule.subjectOwnerId,
+                                                item.classSchedule.date,
+                                                item.classSchedule.day,
+                                                newStatus,
+                                                item.classSchedule.timing
+                                            )
+                                        }
+
                                         AnalyticsHelper.logEvent("update_attendance", android.os.Bundle().apply {
                                             putString("subject", item.parentSubject.subject)
                                             putInt("status", newStatus)
-                                            putBoolean("is_extra", true)
+                                            putBoolean("is_extra", item.classSchedule.isExtra)
                                         })
                                     }
                                 )
@@ -505,14 +525,14 @@ fun ScheduleItemRow(
         ) {
             Text(
                 text = startTime,
-                color = Color.DarkGray,
+                color = MaterialTheme.colorScheme.onBackground.copy(0.75f),
                 fontFamily = plusJak,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium
             )
             Text(
                 text = endTime,
-                color = Color.DarkGray.copy(alpha = 0.7f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f),
                 fontFamily = plusJak,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal

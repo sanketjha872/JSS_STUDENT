@@ -44,14 +44,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.UserPref.UserPreferences
 import com.jhainusa.jss_student.ui.theme.black1a
@@ -156,9 +159,9 @@ fun FullPAge(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(20.dp),
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.Start,
     ) {
         item {
             Column(modifier = Modifier.padding(horizontal = 20.dp).padding(top = 20.dp)) {
@@ -177,7 +180,7 @@ fun FullPAge(
         }
         item {
             Column(modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 20.dp)) {
-                TodayClassesSection(todayClasses)
+                TodayClassesSection(todayClasses, onClick = {})
             }
         }
     }
@@ -247,7 +250,7 @@ fun GreetingHeader(
         Text(
             text = "$greeting\n$name",
             fontSize = 30.sp,
-            color = Color(0xFF262626),
+            color = MaterialTheme.colorScheme.onBackground,
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
         )
 
@@ -267,8 +270,8 @@ fun GreetingHeader(
             },
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFF5F4F4),
-                contentColor = Color.Black
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onBackground
             ),
         ) {
             Icon(
@@ -278,7 +281,7 @@ fun GreetingHeader(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text("Invite\nFriends",
-                color = Color(0xFF262626),
+                color = MaterialTheme.colorScheme.onBackground,
                 fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 textAlign = TextAlign.Center,
                 fontSize = 14.sp)
@@ -287,13 +290,13 @@ fun GreetingHeader(
 }
 
 @Composable
-fun TodayClassesSection(classes: List<TodayClassItem>) {
+fun TodayClassesSection(classes: List<TodayClassItem>, onClick : () -> Unit) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(Color(0xFFF5F4F4))
+            .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(20.dp)
     ) {
         Row(
@@ -305,19 +308,21 @@ fun TodayClassesSection(classes: List<TodayClassItem>) {
                 text = "Today classes",
                 fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 fontWeight = FontWeight.Bold,
-                color = black1a,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 19.sp
             )
             Box(
                 modifier = Modifier
                     .padding(5.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFFFFFFF))
+                    .background(Color(0xFFF7F5F5))
                     .padding(8.dp)
+                    .clickable(onClick = onClick)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.baseline_arrow_forward_24),
                     contentDescription = null,
+                    tint = Color.Black,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -329,7 +334,7 @@ fun TodayClassesSection(classes: List<TodayClassItem>) {
                 text = "No upcoming classes for today",
                 fontFamily = plusJak,
                 fontSize = 14.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onBackground.copy(0.65f),
                 modifier = Modifier.padding(vertical = 20.dp)
             )
         } else {

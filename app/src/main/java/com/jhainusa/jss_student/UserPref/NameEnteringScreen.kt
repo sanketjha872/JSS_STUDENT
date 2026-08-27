@@ -16,6 +16,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,10 +33,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.jhainusa.jss_student.R
 import com.jhainusa.jss_student.plusJak
 import io.github.jan.supabase.postgrest.from
@@ -43,7 +46,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 @Composable
 fun NameInputScreen(viewModel: NameViewModel = viewModel(),
-                    navController: NavController) {
+                    navController: NavController
+) {
     var nameInput by remember { mutableStateOf("") }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
@@ -53,6 +57,7 @@ fun NameInputScreen(viewModel: NameViewModel = viewModel(),
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 32.dp)
             .imePadding(),
         verticalArrangement = Arrangement.Center,

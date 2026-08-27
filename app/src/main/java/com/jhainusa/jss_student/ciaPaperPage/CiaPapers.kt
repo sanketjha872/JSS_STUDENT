@@ -28,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -80,7 +81,9 @@ fun Papers(navController: NavController) {
 
         LazyColumn(
             state = scrollState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().background(
+                MaterialTheme.colorScheme.background
+            )
         ) {
             item {
                 CollapsingHeader(scrollState)
@@ -134,32 +137,20 @@ fun CollapsingHeader(scrollState: LazyListState) {
                 translationX = translateY
                 this.alpha = alpha
             }
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(20.dp),
         verticalArrangement = Arrangement.Absolute.spacedBy(9.dp),
         horizontalAlignment = Alignment.Start,
     ) {
-        /*Icon(
-            painter = painterResource(R.drawable.arrow_up_svgrepo_com),
-            contentDescription = null,
-            modifier = Modifier.size(30.dp)
-        )*/
-
-        /*Text(
-            text = "Exam\nPapers of CIA",
-            fontSize = 35.sp,
-            color = Color(0xFF262626),
-            fontFamily = FontFamily(Font(R.font.plusjakartasansbold))
-        )*/
         Text(
             text = "Exam Papers",
-            color = Color(0xFF1A1A1A),
+            color = MaterialTheme.colorScheme.primary,
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
             fontSize = 30.sp,
         )
         Text(
             text = "Internal College Papers",
-            color = Color(0xFF6B7280),
+            color = MaterialTheme.colorScheme.onSurface,
             fontFamily = FontFamily(Font(R.font.plusjakartasansregular)),
             fontSize = 18.sp,
         )
@@ -188,13 +179,14 @@ fun SBar(
         textStyle = TextStyle(
             fontFamily = plusJak, // custom font
             fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.primary
         ),
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp)),
         colors = OutlinedTextFieldDefaults.colors(
-            unfocusedContainerColor = Color(0xFFF1F1F3),
-            focusedContainerColor = Color(0xFFF1F1F3),
+            unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
+            focusedContainerColor = MaterialTheme.colorScheme.secondary,
             focusedBorderColor = Color.Transparent,
             unfocusedBorderColor = Color.Transparent,
             cursorColor = Color.Gray
@@ -231,7 +223,8 @@ fun Years(
                     Font(R.font.plusjakartasansmedium)
                 ),
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
+                fontSize = 15.sp,
+                color = Color.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -245,6 +238,7 @@ fun Years(
             Icon(
                 painter = painterResource(R.drawable.arrow_sm_right_svgrepo_com),
                 contentDescription = null,
+                tint = Color.Black,
                 modifier = Modifier.padding(5.dp)
                     .clip(CircleShape)
                     .background(Color.White)

@@ -14,11 +14,15 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,6 +53,7 @@ import com.jhainusa.jss_student.ciaPaperPage.Routes
 import com.jhainusa.jss_student.ciaPaperPage.SemesterListScreen
 import com.jhainusa.jss_student.onboarding.DesiredAttendanceScreen
 import com.jhainusa.jss_student.onboarding.OnboardingScreen
+import com.jhainusa.jss_student.ui.theme.JSS_STUDENTTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -82,8 +87,11 @@ class MainActivity : ComponentActivity() {
             val onboardingCompleted = UserPreferences.isOnboardingCompleted(this@MainActivity).first()
             val desiredAttendanceDone =
                 UserPreferences.isDesiredAttendanceDone(this@MainActivity).first()
+            val darkModeEnabled = UserPreferences.getDarkMode(this@MainActivity).first()
 
         setContent {
+            val isDarkMode by UserPreferences.getDarkMode(LocalContext.current).collectAsState(initial = darkModeEnabled)
+            JSS_STUDENTTheme(darkTheme = isDarkMode) {
             val context = LocalContext.current
 
             // 1. Define the Permission Launcher
@@ -207,6 +215,27 @@ class MainActivity : ComponentActivity() {
                     BunkAnalyticsScreen(viewModel, subjectId)
                 }
 
+                composable(
+                    route = Routes.ADD_CLASS,
+                    enterTransition = {
+                        slideIntoContainer(
+                            AnimatedContentTransitionScope.SlideDirection.Up,
+                            animationSpec = tween(300)
+                        )
+                    },
+                    arguments = listOf(navArgument("subjectId") {
+                        type = NavType.IntType
+                        defaultValue = -1
+                    })
+                ) { backStackEntry ->
+                    val subjectId = backStackEntry.arguments?.getInt("subjectId") ?: -1
+                    AddClassScreen(
+                        viewModel = viewModel,
+                        subjectId = subjectId,
+                        onDismiss = { navController.popBackStack() }
+                    )
+                }
+
                 composable(Routes.MORE_OPTIONS) {
                     MoreOptionsScreen(onBackClick = { navController.popBackStack() })
                 }
@@ -226,6 +255,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+                }
         }
     }
 }
@@ -238,7 +268,7 @@ fun AllScreenNav(viewModel: MainVIewModel, mainNav: NavController) {
 
     Scaffold(
         bottomBar = { btbar(navController) },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         AnimatedNavHost(
             navController = navController,

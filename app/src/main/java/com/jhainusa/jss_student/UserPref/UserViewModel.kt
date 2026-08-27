@@ -21,6 +21,12 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
     private val _notificationsEnabledFlow = MutableStateFlow(true)
     val notificationsEnabledFlow: StateFlow<Boolean> = _notificationsEnabledFlow.asStateFlow()
 
+    private val _darkModeFlow = MutableStateFlow(false)
+    val darkModeFlow: StateFlow<Boolean> = _darkModeFlow.asStateFlow()
+
+    private val _desiredAttendanceFlow = MutableStateFlow(75f)
+    val desiredAttendanceFlow: StateFlow<Float> = _desiredAttendanceFlow.asStateFlow()
+
     init {
         viewModelScope.launch {
             UserPreferences.getName(context).collect {
@@ -36,11 +42,33 @@ class NameViewModel(application: Application) : AndroidViewModel(application) {
                 _notificationsEnabledFlow.value = it
             }
         }
+        viewModelScope.launch {
+            UserPreferences.getDarkMode(context).collect {
+                _darkModeFlow.value = it
+            }
+        }
+        viewModelScope.launch {
+            UserPreferences.getDesiredAttendance(context).collect {
+                _desiredAttendanceFlow.value = it
+            }
+        }
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             UserPreferences.setNotificationsEnabled(context, enabled)
+        }
+    }
+
+    fun setDarkMode(enabled: Boolean) {
+        viewModelScope.launch {
+            UserPreferences.setDarkMode(context, enabled)
+        }
+    }
+
+    fun saveDesiredAttendance(attendance: Float) {
+        viewModelScope.launch {
+            UserPreferences.saveDesiredAttendance(context, attendance)
         }
     }
 

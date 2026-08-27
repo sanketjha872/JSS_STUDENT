@@ -33,7 +33,7 @@ fun LottieLoader(message: String,resId: Int) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize().background(Color.White).padding(20.dp)
+            modifier = Modifier.fillMaxSize().padding(20.dp)
         ) {
             LottieAnimation(
                 composition,

@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,8 +33,8 @@ fun btbar(navController: NavController) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     BottomNavigation(
-        backgroundColor = Color.White,
-        contentColor = Color.White,
+        backgroundColor = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.background,
         elevation = 5.dp
     ) {
         items.forEach { item ->
@@ -56,13 +57,13 @@ fun btbar(navController: NavController) {
                         modifier = Modifier
                             .size(iconSize)
                             .clip(CircleShape)
-                            .background(if (selected) Color(0xFF262626) else Color.Transparent),
+                            .background(if (selected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             painter = iconPainter,
                             contentDescription = item.route,
-                            tint = if (selected) Color.White else Color.Black,
+                            tint = if (selected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(24.dp)
                         )
                     }

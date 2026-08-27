@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -66,7 +67,7 @@ fun CalendarWithExpandableView(
             Modifier
                 .fillMaxWidth()
                 .height(calendarHeight)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .pointerInput(Unit) {
                     detectVerticalDragGestures(
                         onDragEnd = {
@@ -129,7 +130,7 @@ fun DateStrip(
             ) {
                 Text(
                     text = date.dayOfWeek.name.take(3),
-                    color = if (isSelected) Color.Black else Color.Gray,
+                    color = if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Gray,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     fontSize = 12.sp,
                     fontFamily = plusJak,
@@ -141,7 +142,7 @@ fun DateStrip(
                     modifier = Modifier
                         .size(40.dp)
                         .background(
-                            if (isSelected) Color(0xFF262626) else Color.Transparent,
+                            if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Transparent,
                             shape = CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -151,7 +152,7 @@ fun DateStrip(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
                         fontFamily = plusJak,
-                        color = if (isSelected) Color.White else Color.Black
+                        color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -190,7 +191,7 @@ fun FullMonthCalendar(
                     text = day.name.take(3),
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center,
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     fontFamily = plusJak,
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp
@@ -227,7 +228,7 @@ fun FullMonthCalendar(
                             .padding(4.dp)
                             .clip(CircleShape)
                             .background(
-                                if (isSelected) Color(0xFF262626) else Color.Transparent
+                                if (isSelected) MaterialTheme.colorScheme.onBackground else Color.Transparent
                             )
                             .clickable(enabled = date != null) {
                                 date?.let { onDateSelected(it) }
@@ -238,9 +239,9 @@ fun FullMonthCalendar(
                             Text(
                                 text = date.dayOfMonth.toString(),
                                 color = when {
-                                    isSelected -> Color.White
-                                    isToday -> Color(0xFF262626)
-                                    else -> Color.Black
+                                    isSelected -> MaterialTheme.colorScheme.background
+                                    isToday -> MaterialTheme.colorScheme.onBackground
+                                    else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f)
                                 },
                                 fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
                                 fontSize = 14.sp,

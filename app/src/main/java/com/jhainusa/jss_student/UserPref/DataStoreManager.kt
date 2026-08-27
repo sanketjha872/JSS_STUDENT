@@ -21,6 +21,7 @@ object UserPreferences {
     private val NAME_KEY = stringPreferencesKey("user_name")
     private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val NOTIFICATIONS_ENABLED_KEY = booleanPreferencesKey("notifications_enabled")
+    private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
 
     private val BUNK_TOOLTIP_SHOWN_KEY = booleanPreferencesKey("bunk_tooltip_shown")
     private val SWIPE_TOOLTIP_SHOWN_KEY = booleanPreferencesKey("swipe_tooltip_shown")
@@ -51,6 +52,17 @@ object UserPreferences {
     suspend fun setNotificationsEnabled(context: Context, enabled: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[NOTIFICATIONS_ENABLED_KEY] = enabled
+        }
+    }
+
+    fun getDarkMode(context: Context): Flow<Boolean> {
+        return context.dataStore.data
+            .map { prefs -> prefs[DARK_MODE_KEY] ?: false }
+    }
+
+    suspend fun setDarkMode(context: Context, enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[DARK_MODE_KEY] = enabled
         }
     }
     private fun getHardwareId(context: Context): String {

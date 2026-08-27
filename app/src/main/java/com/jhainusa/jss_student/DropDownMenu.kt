@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,7 @@ import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -84,14 +86,15 @@ fun DropdownMenuExample(
         Icon(
             painter = painterResource(if (isEditMode) R.drawable.check else R.drawable.menu_hamburger_svgrepo_com),
             contentDescription = if (isEditMode) "Done" else "More Options",
-            tint = if (isEditMode) Color(0xFF2E7D32) else Color(0xFF6B7280),
+            tint = if (isEditMode) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(29.dp)
         )
     }
 
     DropdownMenu(
         expanded = expanded,
-        onDismissRequest = { expanded = false }
+        onDismissRequest = { expanded = false },
+        modifier = Modifier.background(MaterialTheme.colorScheme.background)
     ) {
         DropdownMenuItem(onClick = {
             expanded = false
@@ -99,7 +102,7 @@ fun DropdownMenuExample(
         }) {
             Text(
                 text = if (isEditMode) "Done" else "Edit",
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 15.sp,
                 fontFamily = plusJak,
                 modifier = Modifier.weight(1f)
@@ -107,7 +110,7 @@ fun DropdownMenuExample(
             Icon(
                 painter = painterResource(if (isEditMode) R.drawable.baseline_check_24 else R.drawable.edit_svgrepo_com),
                 contentDescription = null,
-                tint = if (isEditMode) Color(0xFF2E7D32) else Color.Black,
+                tint = if (isEditMode) Color(0xFF2E7D32) else MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -117,7 +120,7 @@ fun DropdownMenuExample(
         }) {
             Text(
                 text = "Upload",
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 15.sp,
                 fontFamily = plusJak,
                 modifier = Modifier.weight(1f)
@@ -126,7 +129,7 @@ fun DropdownMenuExample(
             Icon(
                 painter = painterResource(R.drawable.ai_svgrepo_com),
                 contentDescription = null,
-                tint = Color.Black,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -136,7 +139,7 @@ fun DropdownMenuExample(
         }) {
             Text(
                 text = "More",
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 15.sp,
                 fontFamily = plusJak,
                 modifier = Modifier.weight(1f)
@@ -145,7 +148,7 @@ fun DropdownMenuExample(
             Icon(
                 painter = painterResource(R.drawable.setting_2_svgrepo_com),
                 contentDescription = null,
-                tint = Color.Black,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
             )
         }

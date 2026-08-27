@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -34,10 +35,13 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -131,21 +135,35 @@ fun AnimatedDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, onDimiss: () -> Unit) {
+fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () -> Unit) {
     val jakartaFont = plusJak
+    
+    val scheduleToEdit by if (subjectId != -1) {
+        viewModel.observeSchedule(subjectId).observeAsState()
+    } else {
+        remember { mutableStateOf<Schedule?>(null) }
+    }
 
     val selectedDays = remember { 
-        mutableStateMapOf<String, Pair<String, String>>().apply {
-            scheduleToEdit?.scheduleday?.forEach {
-                val times = it.timing.split(" - ")
+        mutableStateMapOf<String, Pair<String, String>>()
+    }
+
+    var subject by remember { mutableStateOf("") }
+    var teacher by remember { mutableStateOf("") }
+
+    LaunchedEffect(scheduleToEdit) {
+        scheduleToEdit?.let {
+            subject = it.subject
+            teacher = it.teacher
+            selectedDays.clear()
+            it.scheduleday.forEach { daySched ->
+                val times = daySched.timing.split(" - ")
                 if (times.size == 2) {
-                    put(it.day, times[0] to times[1])
+                    selectedDays[daySched.day] = times[0] to times[1]
                 }
             }
         }
     }
-    var subject by remember { mutableStateOf(scheduleToEdit?.subject ?: "") }
-    var teacher by remember { mutableStateOf(scheduleToEdit?.teacher ?: "") }
 
     var showTimePicker by remember { mutableStateOf(false) }
     var currentPickingKey by remember { mutableStateOf<String?>(null) }
@@ -154,8 +172,13 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
     val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.Top 
+        modifier = Modifier.fillMaxWidth().background(
+            MaterialTheme.colorScheme.background
+        )
+            .padding(16.dp)
+            .statusBarsPadding(),
+        verticalArrangement = Arrangement.Top,
+
     ) {
         item {
             Text(
@@ -163,7 +186,7 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                 fontFamily = jakartaFont,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryColor
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -182,7 +205,8 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                 text = "Select Days & Timings", 
                 fontFamily = jakartaFont, 
                 fontWeight = FontWeight.SemiBold, 
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(12.dp))
         }
@@ -197,10 +221,10 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                     .fillMaxWidth()
                     .padding(bottom = 12.dp) 
                     .clip(RoundedCornerShape(16.dp))
-                    .background(if (isSelected) Color(0xFFF8F8F8) else Color.Transparent)
+                    .background(if (isSelected) MaterialTheme.colorScheme.surfaceTint else Color.Transparent)
                     .border(
                         1.dp, 
-                        if (isSelected) PrimaryColor.copy(0.1f) else OutlineColor, 
+                        if (isSelected) MaterialTheme.colorScheme.onBackground.copy(0.12f) else OutlineColor,
                         RoundedCornerShape(16.dp)
                     )
                     .clickable {
@@ -220,13 +244,13 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                         modifier = Modifier
                             .size(45.dp)
                             .clip(CircleShape)
-                            .background(if (isSelected) PrimaryColor else Color.White)
-                            .border(1.dp, if (isSelected) PrimaryColor else OutlineColor, CircleShape),
+                            .background(if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.background)
+                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.onBackground else OutlineColor, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = day,
-                            color = if (isSelected) Color.White else PrimaryColor,
+                            color = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                             fontFamily = jakartaFont,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
@@ -239,7 +263,7 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                         text = if (isSelected) "Selected" else "Tap to select",
                         fontFamily = jakartaFont,
                         fontSize = 14.sp,
-                        color = if (isSelected) PrimaryColor else Color.Gray,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -247,7 +271,7 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                         Icon(
                             painter = androidx.compose.ui.res.painterResource(R.drawable.baseline_check_24),
                             contentDescription = null,
-                            tint = PrimaryColor,
+                            tint = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -301,16 +325,17 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                                 teacher = teacher,
                                 scheduleday = schedules,
                                 color = scheduleToEdit?.color ?: assignColor(subject).value.toLong(),
+                                totalClasses = scheduleToEdit?.totalClasses ?: 0
                             )
                         )
-                        onDimiss()
+                        onDismiss()
                     }
                 },
                 enabled = subject.isNotBlank() && selectedDays.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
-                    backgroundColor = PrimaryColor,
-                    contentColor = Color.White,
-                    disabledBackgroundColor = Color.LightGray
+                    backgroundColor = MaterialTheme.colorScheme.onBackground,
+                    contentColor = MaterialTheme.colorScheme.background,
+                    disabledBackgroundColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -321,7 +346,7 @@ fun AddClassScreen(viewModel: MainVIewModel, scheduleToEdit: Schedule? = null, o
                 Text(
                     text = if (scheduleToEdit == null) "Save Class Schedule" else "Update Schedule", 
                     fontFamily = jakartaFont, 
-                    color = Color.White, 
+                    color = MaterialTheme.colorScheme.background,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -372,14 +397,14 @@ fun TimeSelectionBox(
         Text(
             text = label, 
             fontSize = 12.sp, 
-            color = Color.Gray, 
+            color = Color(0xFFA0A0A0),
             fontFamily = plusJak,
             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(12.dp))
                 .border(1.dp, OutlineColor, RoundedCornerShape(12.dp))
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             contentAlignment = Alignment.CenterStart
@@ -388,7 +413,7 @@ fun TimeSelectionBox(
                 Icon(
                     painter = androidx.compose.ui.res.painterResource(R.drawable.calendar_svgrepo_com),
                     contentDescription = null,
-                    tint = Color.Gray,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -396,7 +421,7 @@ fun TimeSelectionBox(
                     text = time,
                     fontFamily = plusJak,
                     fontSize = 14.sp,
-                    color = PrimaryColor,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Medium
                 )
             }

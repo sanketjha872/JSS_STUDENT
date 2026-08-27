@@ -37,9 +37,9 @@ class MainVIewModel(private val repository: ScheduleRepository) : ViewModel() {
 
     fun getAllAttendance() = repository.getAllAttendanceRecords().asLiveData()
 
-    fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {
+    fun updateAttendance(subjectId: Int, date: String, day: String, status: Int, timing: String) {
         viewModelScope.launch {
-            repository.updateAttendance(subjectId, date, day, status)
+            repository.updateAttendance(subjectId, date, day, status, timing)
         }
     }
 

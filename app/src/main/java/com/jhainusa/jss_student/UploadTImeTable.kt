@@ -63,8 +63,6 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
 
     val subjectsList by viewModel.getAll().observeAsState(emptyList())
     var searchSubject by remember { mutableStateOf("") }
-    var showAddSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Tooltip logic
     var isTooltipVisible by remember { mutableStateOf(false) }
@@ -81,7 +79,6 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
     var subjectToDelete by remember { mutableStateOf<Schedule?>(null) }
     var isEditMode by remember { mutableStateOf(false) }
     var isAiLoading by remember { mutableStateOf(false) }
-    var scheduleToEdit by remember { mutableStateOf<Schedule?>(null) }
     val globalLazyListState = rememberLazyListState()
 
     var isBottomBarAndFabVisible by remember { mutableStateOf(true) }
@@ -130,23 +127,22 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             ) {
                 FloatingActionButton(
                     onClick = {
-                        scheduleToEdit = null
-                        showAddSheet = true
+                        navController.navigate("add_class")
                     },
-                    containerColor = Color(0xFF262626),
+                    containerColor = MaterialTheme.colorScheme.primary,
                     shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(16.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Add",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.background,
                         modifier = Modifier.size(28.dp)
                     )
                 }
             }
         },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize()
@@ -162,7 +158,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             ) {
                 Text(
                     text = "My Subjects",
-                    color = Color(0xFF1A1A1A),
+                    color = MaterialTheme.colorScheme.primary,
                     fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                     fontSize = 30.sp,
                 )
@@ -180,7 +176,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "College Semester 2026",
-                color = Color(0xFF6B7280),
+                color = MaterialTheme.colorScheme.onSurface,
                 fontFamily = FontFamily(Font(R.font.plusjakartasansregular)),
                 fontSize = 18.sp,
             )
@@ -235,8 +231,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
                                 }
                             },
                             onEditClick = {
-                                scheduleToEdit = sub
-                                showAddSheet = true
+                                navController.navigate("add_class?subjectId=${sub.subjectId}")
                             },
                             onDeleteClick = {
                                 subjectToDelete = sub
@@ -257,34 +252,6 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             LottieLoader("AI is processing your timetable...", R.raw.handloader)
-        }
-    }
-
-    if (showAddSheet) {
-        ModalBottomSheet(
-            onDismissRequest = {
-                showAddSheet = false
-                scheduleToEdit = null
-            },
-            sheetState = sheetState,
-            containerColor = Color.White,
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
-            ) {
-                AddClassScreen(
-                    viewModel = viewModel,
-                    scheduleToEdit = scheduleToEdit,
-                    onDimiss = {
-                        showAddSheet = false
-                        scheduleToEdit = null
-                    }
-                )
-            }
         }
     }
 
@@ -490,6 +457,7 @@ fun SubjectCard(
                         text = subname,
                         fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
                         fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF262626),
                         fontSize = 17.sp,
                     )
                     Spacer(modifier = Modifier.height(8.dp))

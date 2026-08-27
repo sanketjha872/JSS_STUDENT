@@ -5,6 +5,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,6 +32,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -41,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,6 +64,7 @@ import com.jhainusa.jss_student.UserPref.NameViewModel
 import com.jhainusa.jss_student.ui.theme.SubtitleGray
 import com.jhainusa.jss_student.ui.theme.black1a
 
+
 @Preview
 @Composable
 fun MoreOptionsScreen(
@@ -67,7 +72,11 @@ fun MoreOptionsScreen(
     onBackClick: () -> Unit = {},
 ) {
     val notificationsEnabled by nameViewModel.notificationsEnabledFlow.collectAsState()
+    val systemInDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
+    val darkModeEnabled by nameViewModel.darkModeFlow.collectAsState(initial = systemInDarkTheme)
+    val desiredAttendance by nameViewModel.desiredAttendanceFlow.collectAsState()
     var showFeedbackDialog by remember { mutableStateOf(false) }
+    var showAttendanceDialog by remember { mutableStateOf(false) }
     var feedbackType by remember { mutableStateOf("") }
     val context = LocalContext.current
 
@@ -76,8 +85,8 @@ fun MoreOptionsScreen(
     }
 
     Scaffold(
-        containerColor = Color.White,
-        modifier = Modifier.background(Color.White).statusBarsPadding(),
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.statusBarsPadding(),
         topBar = { MoreOptionsTopBar(onBackClick) }
     ) { paddingValues ->
         LazyColumn(
@@ -94,7 +103,7 @@ fun MoreOptionsScreen(
                     fontSize = 36.sp,
                     fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                     fontWeight = FontWeight.Bold,
-                    color = black1a,
+                    color = MaterialTheme.colorScheme.primary,
                     lineHeight = 40.sp
                 )
             }
@@ -107,8 +116,20 @@ fun MoreOptionsScreen(
             // Support Section
             item {
                 SettingsSection(
-                    title = "Support",
+                    title = "Support & Preferences",
                     items = listOf(
+                        MoreOptionItem(
+                            title = "Desired Attendance",
+                            onClick = { showAttendanceDialog = true }
+                        ) {
+                            Text(
+                                text = "${desiredAttendance.toInt()}%",
+                                fontSize = 18.sp,
+                                fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        },
                         MoreOptionItem("Report a Bug", onClick = {
                             feedbackType = "Bug Report"
                             showFeedbackDialog = true
@@ -128,6 +149,21 @@ fun MoreOptionsScreen(
                                 Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
                             }
                         }),
+
+                        MoreOptionItem(
+                            title = "Dark Mode",
+                            onClick = { nameViewModel.setDarkMode(!darkModeEnabled) }
+                        ) {
+                            Switch(
+                                checked = darkModeEnabled,
+                                onCheckedChange = { nameViewModel.setDarkMode(it) },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = MaterialTheme.colorScheme.background,
+                                    checkedTrackColor = MaterialTheme.colorScheme.onBackground
+                                )
+                            )
+                        },
+
                         MoreOptionItem(
                             title = "Notifications",
                             onClick = { nameViewModel.setNotificationsEnabled(!notificationsEnabled) }
@@ -136,8 +172,8 @@ fun MoreOptionsScreen(
                                 checked = notificationsEnabled,
                                 onCheckedChange = { nameViewModel.setNotificationsEnabled(it) },
                                 colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = Color(0xFF262626)
+                                    checkedThumbColor = MaterialTheme.colorScheme.background,
+                                    checkedTrackColor = MaterialTheme.colorScheme.onBackground
                                 )
                             )
                         }
@@ -197,6 +233,89 @@ fun MoreOptionsScreen(
             }
         )
     }
+
+    if (showAttendanceDialog) {
+        AttendanceDialog(
+            currentAttendance = desiredAttendance,
+            onDismiss = { showAttendanceDialog = false },
+            onConfirm = { newValue ->
+                nameViewModel.saveDesiredAttendance(newValue)
+                showAttendanceDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun AttendanceDialog(
+    currentAttendance: Float,
+    onDismiss: () -> Unit,
+    onConfirm: (Float) -> Unit
+) {
+    var attendance by remember { mutableFloatStateOf(currentAttendance) }
+
+    AnimatedDialog(showDialog = true, onDismiss = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Desired Attendance",
+                fontSize = 22.sp,
+                fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Set your target attendance percentage",
+                fontSize = 14.sp,
+                fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Text(
+                text = "${attendance.toInt()}%",
+                fontSize = 48.sp,
+                fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            androidx.compose.material3.Slider(
+                value = attendance,
+                onValueChange = { attendance = it },
+                valueRange = 0f..100f,
+                steps = 100,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                colors = androidx.compose.material3.SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.outline
+                )
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = { onConfirm(attendance) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Save Changes", fontFamily = FontFamily(Font(R.font.plusjakartasansbold)), fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
 @Composable
@@ -216,23 +335,23 @@ fun FeedbackDialog(
             Text(
                 text = type,
                 fontSize = 20.sp,
-                fontFamily = plusJak,
+                fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 fontWeight = FontWeight.Bold,
-                color = black1a
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(16.dp))
             TextField(
                 value = message,
                 onValueChange = { message = it },
-                placeholder = { Text("Tell us more...", fontFamily = plusJak) },
+                placeholder = { Text("Tell us more...", fontFamily = FontFamily(Font(R.font.plusjakartasansmedium))) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
                 shape = RoundedCornerShape(12.dp),
-                textStyle = TextStyle(fontFamily = plusJak, fontSize = 16.sp),
+                textStyle = TextStyle(fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)), fontSize = 16.sp),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFF5F5F5),
-                    unfocusedContainerColor = Color(0xFFF5F5F5),
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 )
@@ -245,12 +364,12 @@ fun FeedbackDialog(
                     .fillMaxWidth()
                     .height(52.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF262626),
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Text("Submit Feedback", fontFamily = plusJak, fontWeight = FontWeight.Bold)
+                Text("Submit Feedback", fontFamily = FontFamily(Font(R.font.plusjakartasansbold)), fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -269,7 +388,7 @@ fun MoreOptionsTopBar(onBackClick: () -> Unit) {
                 imageVector = Icons.Default.ArrowBackIosNew,
                 contentDescription = "Back",
                 modifier = Modifier.size(20.dp),
-                tint = black1a
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
     }
@@ -341,7 +460,7 @@ fun SettingsSection(title: String, items: List<MoreOptionItem>, bgColor: Color) 
             fontSize = 15.sp,
             fontFamily = plusJak,
             fontWeight = FontWeight.Medium,
-            color = SubtitleGray,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(start = 8.dp, bottom = 14.dp)
         )
         Surface(
@@ -370,6 +489,7 @@ fun SettingsRow(item: MoreOptionItem) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 63.dp)
             .clickable { item.onClick() }
             .padding(horizontal = 20.dp, vertical = if (item.trailingContent != null) 10.dp else 20.dp),
         verticalAlignment = Alignment.CenterVertically,

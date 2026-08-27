@@ -38,15 +38,15 @@ class ScheduleRepository(
         scheduleDao.deleteSubject(schedule)
     }
 
-    suspend fun updateAttendance(subjectId: Int, date: String, day: String, status: Int) {
-        val existing = classScheduleDao.getScheduleForDateSync(subjectId, date)
+    suspend fun updateAttendance(subjectId: Int, date: String, day: String, status: Int, timing: String) {
+        val existing = classScheduleDao.getScheduleByTimingSync(subjectId, date, timing)
 
         if (status == 0) {
             if (existing != null) {
                 if (existing.attendanceStatus == 1) {
                     scheduleDao.decrementTotal(subjectId)
                 }
-                classScheduleDao.deleteScheduleForDate(subjectId, date)
+                classScheduleDao.deleteScheduleForDateByTiming(subjectId, date, timing)
             }
             return
         }
@@ -57,7 +57,7 @@ class ScheduleRepository(
             } else if (existing.attendanceStatus == 1 && status != 1) {
                 scheduleDao.decrementTotal(subjectId)
             }
-            classScheduleDao.updateSchedule(existing.copy(attendanceStatus = status))
+            classScheduleDao.updateSchedule(existing.copy(attendanceStatus = status, timing = timing))
         } else {
             if (status == 1) {
                 scheduleDao.incrementTotal(subjectId)
@@ -67,7 +67,8 @@ class ScheduleRepository(
                     subjectOwnerId = subjectId,
                     date = date,
                     day = day,
-                    attendanceStatus = status
+                    attendanceStatus = status,
+                    timing = timing
                 )
             )
         }
