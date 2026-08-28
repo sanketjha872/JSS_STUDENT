@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -71,7 +72,9 @@ fun TimeTable(vIewModel : MainVIewModel){
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showExtraClassSheet by remember { mutableStateOf(false) }
+    var showHowToUseSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val howToUseSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         AnalyticsHelper.logScreenView("TimeTableScreen", "TimeTable")
@@ -94,6 +97,16 @@ fun TimeTable(vIewModel : MainVIewModel){
                 fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                 modifier = Modifier.weight(1f)
             )
+            IconButton(
+                onClick = { showHowToUseSheet = true },
+                modifier = Modifier.padding(end = 15.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                    contentDescription = "How to use",
+                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+            }
             IconButton(
                 onClick = { showExtraClassSheet = true },
                 modifier = Modifier
@@ -138,6 +151,18 @@ fun TimeTable(vIewModel : MainVIewModel){
                 selectedDate = selectedDate,
                 onDismiss = { showExtraClassSheet = false }
             )
+        }
+    }
+
+    if (showHowToUseSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showHowToUseSheet = false },
+            sheetState = howToUseSheetState,
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            dragHandle = null
+        ) {
+            HowToUseScreen(onDismiss = { showHowToUseSheet = false })
         }
     }
 }
@@ -495,12 +520,21 @@ fun ScheduleItemRow(
     val absentAction = SwipeAction(
         onSwipe = { onStatusChange(2) },
         icon = { Icon(painterResource(R.drawable.cancel_svgrepo_com), null, tint = Color.White, modifier = Modifier.padding(16.dp).size(24.dp)) },
-        background = Color(0xFFF44336)
+        background = Color(0xFFF44336),
+        weight = 4.0 // Takes up more space
+    )
+    val holidayAction = SwipeAction(
+        onSwipe = { onStatusChange(3) },
+        icon = { Icon(painterResource(R.drawable.happyy), null, tint = Color.White, modifier = Modifier.size(24.dp))
+        },
+        background = Color(0xFF2196F3),
+        weight = 1.0// Only appears after a long swipe
     )
 
     val backgroundColor = when (attendanceStatus) {
         1 -> Color(0xFFE8F5E9)
         2 -> Color(0xFFFFEBEE)
+        3 -> Color(0xFFE3F2FD)
         else -> Color(schedule.color.toULong())
     }
 
@@ -543,8 +577,8 @@ fun ScheduleItemRow(
 
         SwipeableActionsBox(
             startActions = listOf(presentAction),
-            endActions = listOf(absentAction),
-            swipeThreshold = 70.dp,
+            endActions = listOf(absentAction, holidayAction),
+            swipeThreshold = 90.dp,
             backgroundUntilSwipeThreshold = Color.Transparent,
             modifier = Modifier.weight(1f)
         ) {
@@ -611,8 +645,18 @@ fun ScheduleItemRow(
                 if (attendanceStatus != 0) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = if (attendanceStatus == 1) "PRESENT" else "ABSENT",
-                        color = if (attendanceStatus == 1) Color(0xFF2E7D32) else Color(0xFFC62828),
+                        text = when(attendanceStatus) {
+                            1 -> "PRESENT"
+                            2 -> "ABSENT"
+                            3 -> "HOLIDAY"
+                            else -> ""
+                        },
+                        color = when(attendanceStatus) {
+                            1 -> Color(0xFF2E7D32)
+                            2 -> Color(0xFFC62828)
+                            3 -> Color(0xFF1565C0)
+                            else -> Color.Transparent
+                        },
                         fontSize = 10.sp,
                         fontWeight = FontWeight.ExtraBold
                     )

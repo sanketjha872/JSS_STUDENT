@@ -257,8 +257,9 @@ fun AttendanceDialog(
     AnimatedDialog(showDialog = true, onDismiss = onDismiss) {
         Column(
             modifier = Modifier
+                .background(MaterialTheme.colorScheme.background, shape = RoundedCornerShape(10.dp))
                 .fillMaxWidth()
-                .padding(vertical = 12.dp),
+                .padding(vertical = 12.dp, horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -343,15 +344,24 @@ fun FeedbackDialog(
             TextField(
                 value = message,
                 onValueChange = { message = it },
-                placeholder = { Text("Tell us more...", fontFamily = FontFamily(Font(R.font.plusjakartasansmedium))) },
+                placeholder = {
+                    Text(
+                        "Tell us more...",
+                        fontFamily = FontFamily(Font(R.font.plusjakartasansmedium))
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp),
                 shape = RoundedCornerShape(12.dp),
-                textStyle = TextStyle(fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)), fontSize = 16.sp),
+                textStyle = TextStyle(
+                    fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                ),
                 colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 )
@@ -369,7 +379,11 @@ fun FeedbackDialog(
                 ),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Text("Submit Feedback", fontFamily = FontFamily(Font(R.font.plusjakartasansbold)), fontWeight = FontWeight.Bold)
+                Text(
+                    "Submit Feedback",
+                    fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

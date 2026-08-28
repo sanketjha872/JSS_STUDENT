@@ -33,7 +33,7 @@ data class ClassSchedule(
     val subjectOwnerId: Int,
     val day: String,
     val date : String = "",
-    val attendanceStatus: Int = 0, // 0: Unmarked, 1: Present, 2: Absent
+    val attendanceStatus: Int = 0, // 0: Unmarked, 1: Present, 2: Absent, 3: Holiday
     val timing: String = "",
     val isExtra: Boolean = false
 )

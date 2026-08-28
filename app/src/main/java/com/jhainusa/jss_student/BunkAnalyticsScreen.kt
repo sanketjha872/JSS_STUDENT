@@ -97,9 +97,10 @@ fun BunkAnalyticsContent(
         date != null && !date.isBefore(startDate) && !date.isAfter(endDate)
     }
 
-    val totalClassesInRange = filteredAttendance.size
-    val attendedClassesInRange = filteredAttendance.count { it.attendanceStatus == 1 }
-    val missedClassesInRange = filteredAttendance.count { it.attendanceStatus == 2 }
+    val relevantAttendance = filteredAttendance.filter { it.attendanceStatus == 1 || it.attendanceStatus == 2 }
+    val totalClassesInRange = relevantAttendance.size
+    val attendedClassesInRange = relevantAttendance.count { it.attendanceStatus == 1 }
+    val missedClassesInRange = relevantAttendance.count { it.attendanceStatus == 2 }
     val rangeAttendanceRate = if (totalClassesInRange > 0) (attendedClassesInRange.toDouble() / totalClassesInRange) else 0.0
     val rangeAttendanceRatePercent = (rangeAttendanceRate * 100).toInt()
 
@@ -476,6 +477,7 @@ fun AttendanceCalendarCard(
                             val targetBgColor = when(attendance?.attendanceStatus) {
                                 1 -> Color(0xFF77BB7E) // Present - Green
                                 2 -> Color(0xF3F24D4D) // Absent - Red
+                                3 -> Color(0xFF2196F3) // Holiday - Blue
                                 else -> Color.Transparent
                             }
                             val animatedBgColor by animateColorAsState(

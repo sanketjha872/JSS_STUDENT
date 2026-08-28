@@ -33,8 +33,11 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
@@ -42,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -106,7 +111,7 @@ fun AnimatedDialogContent(content: @Composable () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 24.dp)
-                .background(Color.White, RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.background, RoundedCornerShape(24.dp))
                 .padding(20.dp)
         ) {
             content()
@@ -145,7 +150,7 @@ fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () 
     }
 
     val selectedDays = remember { 
-        mutableStateMapOf<String, Pair<String, String>>()
+        mutableStateMapOf<String, androidx.compose.runtime.snapshots.SnapshotStateList<Pair<String, String>>>()
     }
 
     var subject by remember { mutableStateOf("") }
@@ -159,7 +164,8 @@ fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () 
             it.scheduleday.forEach { daySched ->
                 val times = daySched.timing.split(" - ")
                 if (times.size == 2) {
-                    selectedDays[daySched.day] = times[0] to times[1]
+                    val list = selectedDays.getOrPut(daySched.day) { androidx.compose.runtime.mutableStateListOf() }
+                    list.add(times[0] to times[1])
                 }
             }
         }
@@ -167,6 +173,7 @@ fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () 
 
     var showTimePicker by remember { mutableStateOf(false) }
     var currentPickingKey by remember { mutableStateOf<String?>(null) }
+    var currentPickingIndex by remember { mutableStateOf(0) }
     var isPickingStartTime by remember { mutableStateOf(true) }
 
     val days = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
@@ -228,10 +235,8 @@ fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () 
                         RoundedCornerShape(16.dp)
                     )
                     .clickable {
-                        if (isSelected) {
-                            selectedDays.remove(key)
-                        } else {
-                            selectedDays[key] = "09:00 AM" to "10:00 AM"
+                        if (!isSelected) {
+                            selectedDays[key] = androidx.compose.runtime.mutableStateListOf("09:00 AM" to "10:00 AM")
                         }
                     }
                     .padding(12.dp)
@@ -268,52 +273,92 @@ fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () 
                     )
                     
                     if (isSelected) {
-                        Icon(
-                            painter = androidx.compose.ui.res.painterResource(R.drawable.baseline_check_24),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        IconButton(
+                            onClick = { selectedDays.remove(key) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.cross),
+                                contentDescription = "Deselect",
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
 
                 if (isSelected) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    val (start, end) = selectedDays[key]!!
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        TimeSelectionBox(
-                            label = "Start",
-                            time = start,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                currentPickingKey = key
-                                isPickingStartTime = true
-                                showTimePicker = true
-                            }
-                        )
+                    val timeSlots = selectedDays[key]!!
+                    
+                    timeSlots.forEachIndexed { index, (start, end) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TimeSelectionBox(
+                                label = "Start",
+                                time = start,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    currentPickingKey = key
+                                    currentPickingIndex = index
+                                    isPickingStartTime = true
+                                    showTimePicker = true
+                                }
+                            )
 
-                        TimeSelectionBox(
-                            label = "End",
-                            time = end,
-                            modifier = Modifier.weight(1f),
-                            onClick = {
-                                currentPickingKey = key
-                                isPickingStartTime = false
-                                showTimePicker = true
+                            TimeSelectionBox(
+                                label = "End",
+                                time = end,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    currentPickingKey = key
+                                    currentPickingIndex = index
+                                    isPickingStartTime = false
+                                    showTimePicker = true
+                                }
+                            )
+                            
+                            if (timeSlots.size > 1) {
+                                IconButton(
+                                    onClick = { timeSlots.removeAt(index) },
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.delete),
+                                        contentDescription = "Remove Period",
+                                        tint = Color.Red.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
-                        )
+                        }
                     }
+                    
+                    Text(
+                        text = " + Add another period",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = jakartaFont,
+                        modifier = Modifier
+                            .clickable {
+                                timeSlots.add("10:00 AM" to "11:00 AM")
+                            }
+                            .padding(vertical = 4.dp)
+                    )
                 }
             }
         }
 
         item {
             Spacer(modifier = Modifier.height(12.dp))
-            val schedules = selectedDays.map { (day, value) ->
-                DaySchedule(day, "${value.first} - ${value.second}")
+            val schedules = selectedDays.flatMap { (day, list) ->
+                list.map { timingPair ->
+                    DaySchedule(day, "${timingPair.first} - ${timingPair.second}")
+                }
             }
             Button(
                 onClick = {
@@ -356,7 +401,8 @@ fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () 
     }
 
     if (showTimePicker && currentPickingKey != null) {
-        val currentPair = selectedDays[currentPickingKey!!]!!
+        val timeSlots = selectedDays[currentPickingKey!!]!!
+        val currentPair = timeSlots[currentPickingIndex]
         val initialTimeStr = if (isPickingStartTime) currentPair.first else currentPair.second
         
         val hour = try { 
@@ -373,11 +419,11 @@ fun AddClassScreen(viewModel: MainVIewModel, subjectId: Int = -1, onDismiss: () 
             initialMinute = minute,
             onTimeSelected = { h, m ->
                 val formatted = formatTime(h, m)
-                val pair = selectedDays[currentPickingKey!!]!!
+                val pair = timeSlots[currentPickingIndex]
                 if (isPickingStartTime) {
-                    selectedDays[currentPickingKey!!] = formatted to pair.second
+                    timeSlots[currentPickingIndex] = formatted to pair.second
                 } else {
-                    selectedDays[currentPickingKey!!] = pair.first to formatted
+                    timeSlots[currentPickingIndex] = pair.first to formatted
                 }
                 showTimePicker = false
             },

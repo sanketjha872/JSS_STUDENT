@@ -98,8 +98,9 @@ fun FullPAge(
 
     val attendanceData by remember(allAttendance, desiredAttendance) {
         derivedStateOf {
-            val totalMarked = allAttendance.size
-            val presentCount = allAttendance.count { it.attendanceStatus == 1 }
+            val relevantAttendance = allAttendance.filter { it.attendanceStatus == 1 || it.attendanceStatus == 2 }
+            val totalMarked = relevantAttendance.size
+            val presentCount = relevantAttendance.count { it.attendanceStatus == 1 }
             val percentage = if (totalMarked > 0) (presentCount.toFloat() / totalMarked * 100).toInt() else 0
 
             val status = when {
@@ -123,7 +124,7 @@ fun FullPAge(
     val subjectWiseAttendance by remember(subjectsList, allAttendance) {
         derivedStateOf {
             subjectsList.map { subject ->
-                val subjectRecords = allAttendance.filter { it.subjectOwnerId == subject.subjectId }
+                val subjectRecords = allAttendance.filter { it.subjectOwnerId == subject.subjectId && (it.attendanceStatus == 1 || it.attendanceStatus == 2) }
                 val totalMarked = subjectRecords.size
                 val presentCount = subjectRecords.count { it.attendanceStatus == 1 }
                 val percentage = if (totalMarked > 0) (presentCount.toFloat() / totalMarked * 100).toInt() else 0
@@ -384,7 +385,8 @@ fun classComp(
                     Font(R.font.plusjakartasansmedium)
                 ),
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
+                fontSize = 15.sp,
+                color = Color.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
@@ -404,6 +406,7 @@ fun classComp(
             Icon(
                 painter = icon,
                 contentDescription = null,
+                tint = Color.DarkGray
             )
         }
     }
@@ -512,7 +515,7 @@ fun SubjectWiseAttendanceDialogContent(
             text = "Subject-wise Attendance",
             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
             fontSize = 20.sp,
-            color = Color.Black
+            color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -553,13 +556,13 @@ fun SubjectWiseAttendanceDialogContent(
                                 fontFamily = plusJak,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp,
-                                color = Color.Black
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "${item.presentClasses}/${item.totalClasses} classes attended",
                                 fontFamily = plusJak,
                                 fontSize = 12.sp,
-                                color = Color.DarkGray
+                                color = MaterialTheme.colorScheme.onBackground
                             )
                         }
 
@@ -568,7 +571,9 @@ fun SubjectWiseAttendanceDialogContent(
                             fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 20.sp,
-                            color = if (item.percentage >= desiredAttendance) Color(0xFF2E7D32) else Color(0xFFC62828)
+                            color = if (item.percentage >= desiredAttendance) Color(0xFF0FB517) else Color(
+                                0xFFEE2828
+                            )
                         )
                     }
                 }

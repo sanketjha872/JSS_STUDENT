@@ -393,15 +393,28 @@ fun AttendanceHistoryDialog(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    if (record.attendanceStatus == 1) Color(0xFFE8F5E9)
-                                    else Color(0xFFFFEBEE)
+                                    when (record.attendanceStatus) {
+                                        1 -> Color(0xFFE8F5E9)
+                                        2 -> Color(0xFFFFEBEE)
+                                        3 -> Color(0xFFE3F2FD)
+                                        else -> Color.LightGray
+                                    }
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = if (record.attendanceStatus == 1) "Present" else "Absent",
-                                color = if (record.attendanceStatus == 1) Color(0xFF2E7D32)
-                                else Color(0xFFC62828),
+                                text = when (record.attendanceStatus) {
+                                    1 -> "Present"
+                                    2 -> "Absent"
+                                    3 -> "Holiday"
+                                    else -> "Unmarked"
+                                },
+                                color = when (record.attendanceStatus) {
+                                    1 -> Color(0xFF2E7D32)
+                                    2 -> Color(0xFFC62828)
+                                    3 -> Color(0xFF1565C0)
+                                    else -> Color.DarkGray
+                                },
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )

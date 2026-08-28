@@ -13,17 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="DesiredAttendanceScreenPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-07-28T09:11:24.509632700Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=ZA223BQT4J" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="MoreOptionsScreen">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-07-28T09:11:24.509632700Z">
@@ -47,6 +36,17 @@
         <DialogSelection />
       </SelectionState>
       <SelectionState runConfigName="NameInputScreen">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-07-28T09:11:24.509632700Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=ZA223BQT4J" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="HowToUseScreen">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-07-28T09:11:24.509632700Z">
           <Target type="DEFAULT_BOOT">
