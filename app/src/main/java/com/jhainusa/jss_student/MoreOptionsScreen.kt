@@ -138,16 +138,11 @@ fun MoreOptionsScreen(
                             feedbackType = "Feature Suggestion"
                             showFeedbackDialog = true
                         }),
-                        MoreOptionItem("Contact Support", onClick = {
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("mailto:sanketjha116@gmail.com")
-                                putExtra(Intent.EXTRA_SUBJECT, "Support: Schedo App")
-                            }
-                            try {
+                        MoreOptionItem("Talk to founder / Support", onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW,
+                                Uri.parse("https://www.instagram.com/schedo010/"))
                                 context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
-                            }
+
                         }),
 
                         MoreOptionItem(
