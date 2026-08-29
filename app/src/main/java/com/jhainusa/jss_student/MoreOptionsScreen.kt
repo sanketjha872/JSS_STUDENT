@@ -178,7 +178,7 @@ fun MoreOptionsScreen(
                             )
                         }
                     ),
-                    bgColor = Color(0xFFDFF7EC).copy(alpha = 0.7f)
+                    bgColor = MaterialTheme.colorScheme.primaryContainer
                 )
             }
 
@@ -207,7 +207,7 @@ fun MoreOptionsScreen(
                             context.startActivity(Intent.createChooser(shareIntent, "Share Schedo via"))
                         })
                     ),
-                    bgColor = Color(0xFFFFE6E6).copy(alpha = 0.7f)
+                    bgColor = MaterialTheme.colorScheme.primaryContainer
                 )
             }
             item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -489,7 +489,7 @@ fun SettingsSection(title: String, items: List<MoreOptionItem>, bgColor: Color) 
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 20.dp),
                             thickness = 1.5.dp,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.background
                         )
                     }
                 }
@@ -514,7 +514,7 @@ fun SettingsRow(item: MoreOptionItem) {
             fontSize = 16.sp,
             fontFamily = FontFamily(Font(R.font.plusjakartasansmedium)),
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF323131)
+            color = MaterialTheme.colorScheme.primary
         )
         item.trailingContent?.invoke()
     }

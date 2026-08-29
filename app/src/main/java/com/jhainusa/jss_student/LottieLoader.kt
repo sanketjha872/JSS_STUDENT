@@ -13,6 +13,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.airbnb.lottie.compose.LottieAnimation
@@ -33,7 +35,7 @@ fun LottieLoader(message: String,resId: Int) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize().padding(20.dp)
+            modifier = Modifier.fillMaxSize().background(Color.White).padding(20.dp)
         ) {
             LottieAnimation(
                 composition,
@@ -42,7 +44,11 @@ fun LottieLoader(message: String,resId: Int) {
             )
             Text(
                 text = message,
+                textAlign = TextAlign.Center,
                 fontSize = 16.sp,
+                style = TextStyle(
+                    lineHeight = 25.sp
+                ),
                 color = Color.Black,
                 fontFamily = plusJak
             )

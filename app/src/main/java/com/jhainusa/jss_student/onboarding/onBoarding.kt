@@ -285,7 +285,7 @@ fun OnboardingScreen(
             onDismissRequest = { },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            LottieLoader("AI is processing your timetable...", R.raw.handloader)
+            LottieLoader("AI is processing your timetable...\nAI can make mistakes so please recheck it", R.raw.handloader)
         }
     }
 }

@@ -251,7 +251,7 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             onDismissRequest = { },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            LottieLoader("AI is processing your timetable...", R.raw.handloader)
+            LottieLoader("AI is processing your timetable...\n Ai can make mistakes so please check it", R.raw.handloader)
         }
     }
 
@@ -264,12 +264,11 @@ fun UploadTimeTableScreen(viewModel: MainVIewModel, navController: NavController
             text = {
                 Text(
                     text = "Are you sure you want to delete the subject \"${subjectToDelete?.subject}\"?",
-                    fontFamily = plusJak,
+                    fontFamily = FontFamily(Font(R.font.plusjakartasansbold)),
                     style = TextStyle(
                         lineHeight = 24.sp,
-                        letterSpacing = 0.8.sp
+                        color = Color.DarkGray
                     ),
-                    fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp
                 )
             },

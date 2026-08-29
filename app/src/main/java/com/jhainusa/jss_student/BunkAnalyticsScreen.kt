@@ -350,7 +350,7 @@ fun AttendanceCalendarCard(
     val accentColor = MaterialTheme.colorScheme.onSurface
     var currentMonth by remember(endDate) { mutableStateOf(YearMonth.from(endDate)) }
     
-    val attendanceMap = attendanceHistory.associateBy { it.date }
+    val attendanceMap = attendanceHistory.groupBy { it.date }
 
     Column(
         modifier = Modifier
@@ -472,12 +472,17 @@ fun AttendanceCalendarCard(
                             val dateString = date.format(DateTimeFormatter.ISO_DATE)
                             
                             val isWithinRange = !date.isBefore(startDate) && !date.isAfter(endDate)
-                            val attendance = if (isWithinRange) attendanceMap[dateString] else null
-                            
-                            val targetBgColor = when(attendance?.attendanceStatus) {
-                                1 -> Color(0xFF77BB7E) // Present - Green
-                                2 -> Color(0xF3F24D4D) // Absent - Red
-                                3 -> Color(0xFF2196F3) // Holiday - Blue
+                            val attendanceList = if (isWithinRange) attendanceMap[dateString] ?: emptyList() else emptyList()
+
+                            val hasAbsent = attendanceList.any { it.attendanceStatus == 2 }
+                            val hasPresent = attendanceList.any { it.attendanceStatus == 1 }
+
+                            val targetBgColor = when {
+                                attendanceList.isEmpty() -> Color.Transparent
+                                hasAbsent && hasPresent -> Color(0xFFF5C278) // Mixed - Orange
+                                hasAbsent -> Color(0xF3F24D4D) // All Absent - Red
+                                hasPresent -> Color(0xFF77BB7E) // All Present - Green
+                                attendanceList.any { it.attendanceStatus == 3 } -> Color(0xFF2196F3) // Holiday - Blue
                                 else -> Color.Transparent
                             }
                             val animatedBgColor by animateColorAsState(
@@ -486,7 +491,7 @@ fun AttendanceCalendarCard(
                             )
 
                             val targetTextColor = when {
-                                attendance != null -> Color.White
+                                attendanceList.isNotEmpty() -> Color.White
                                 !isWithinRange -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                                 else -> MaterialTheme.colorScheme.tertiary
                             }
@@ -517,8 +522,33 @@ fun AttendanceCalendarCard(
                                     fontSize = 16.sp,
                                     fontFamily = plusJak,
                                     color = animatedTextColor,
-                                    fontWeight = if (attendance != null) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (attendanceList.isNotEmpty()) FontWeight.Bold else FontWeight.Normal
                                 )
+
+                                if (attendanceList.size > 1) {
+                                    Row(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .padding(bottom = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        // Sort to show Present marks first, then Absent
+                                        attendanceList.sortedBy { it.attendanceStatus }.take(4).forEach { cls ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(3.5.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        when (cls.attendanceStatus) {
+                                                            1 ->  Color(0xFF059F13) // Present
+                                                            2 -> Color(0xF3C41616) // Absent
+                                                            else -> Color(0xD81A4FF4)
+                                                        }
+                                                    )
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

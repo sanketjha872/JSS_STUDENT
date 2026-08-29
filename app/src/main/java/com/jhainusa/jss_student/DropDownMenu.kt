@@ -159,7 +159,7 @@ fun DropdownMenuExample(
             onDismissRequest = { },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            LottieLoader("Analyzing your image...", R.raw.handloader)
+            LottieLoader("Analyzing your image...\n AI can make mistakes so please verify it", R.raw.handloader)
         }
     }
 }
