@@ -396,8 +396,8 @@ fun ScheduleTimeline(selectedDate: LocalDate, viewModel: MainVIewModel) {
                         // Only add if there isn't already a record in the database for this subject and timing
                         extraClasses.none { 
                             it.subjectOwnerId == schedule.subjectId && 
-                            it.timing == daySchedule.timing && 
-                            !it.isExtra 
+                            it.timing == daySchedule.timing &&
+                            !it.isExtra
                         }
                     }
                     .map { daySchedule -> 

@@ -3,6 +3,8 @@ package com.jhainusa.jss_student
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -60,25 +62,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.livedata.observeAsState
+import com.jhainusa.jss_student.RoomDatabase.MainVIewModel
 import com.jhainusa.jss_student.UserPref.NameViewModel
 import com.jhainusa.jss_student.ui.theme.SubtitleGray
 import com.jhainusa.jss_student.ui.theme.black1a
 
 
-@Preview
 @Composable
 fun MoreOptionsScreen(
     nameViewModel: NameViewModel = viewModel(),
+    mainViewModel: MainVIewModel,
+    moreOptionsViewModel: MoreOptionsViewModel = viewModel(),
     onBackClick: () -> Unit = {},
 ) {
+    val subjectsList by mainViewModel.getAll().observeAsState(emptyList())
+    val userName by nameViewModel.nameFlow.collectAsState()
     val notificationsEnabled by nameViewModel.notificationsEnabledFlow.collectAsState()
     val systemInDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
     val darkModeEnabled by nameViewModel.darkModeFlow.collectAsState(initial = systemInDarkTheme)
     val desiredAttendance by nameViewModel.desiredAttendanceFlow.collectAsState()
-    var showFeedbackDialog by remember { mutableStateOf(false) }
-    var showAttendanceDialog by remember { mutableStateOf(false) }
-    var feedbackType by remember { mutableStateOf("") }
+    val showFeedbackDialog by moreOptionsViewModel.showFeedbackDialog.collectAsState()
+    val showAttendanceDialog by moreOptionsViewModel.showAttendanceDialog.collectAsState()
+    val feedbackType by moreOptionsViewModel.feedbackType.collectAsState()
     val context = LocalContext.current
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            moreOptionsViewModel.importSchedule(context, it, mainViewModel)
+        }
+    }
 
     LaunchedEffect(Unit) {
         AnalyticsHelper.logScreenView("MoreOptions", "MoreOptions")
@@ -120,7 +135,7 @@ fun MoreOptionsScreen(
                     items = listOf(
                         MoreOptionItem(
                             title = "Desired Attendance",
-                            onClick = { showAttendanceDialog = true }
+                            onClick = { moreOptionsViewModel.showAttendanceDialog() }
                         ) {
                             Text(
                                 text = "${desiredAttendance.toInt()}%",
@@ -131,27 +146,28 @@ fun MoreOptionsScreen(
                             )
                         },
                         MoreOptionItem("Report a Bug", onClick = {
-                            feedbackType = "Bug Report"
-                            showFeedbackDialog = true
+                            moreOptionsViewModel.showFeedbackDialog("Bug Report")
                         }),
                         MoreOptionItem("Suggest a Feature", onClick = {
-                            feedbackType = "Feature Suggestion"
-                            showFeedbackDialog = true
+                            moreOptionsViewModel.showFeedbackDialog("Feature Suggestion")
                         }),
                         MoreOptionItem("Talk to founder / Support", onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW,
-                                Uri.parse("https://www.instagram.com/schedo010/"))
-                                context.startActivity(intent)
-
+                            moreOptionsViewModel.openInstagram(context)
+                        }),
+                        MoreOptionItem("Share Schedule File", onClick = {
+                            moreOptionsViewModel.exportSchedule(context, subjectsList, userName)
+                        }),
+                        MoreOptionItem("Import Shared Schedule File", onClick = {
+                            filePickerLauncher.launch("*/*")
                         }),
 
                         MoreOptionItem(
                             title = "Dark Mode",
-                            onClick = { nameViewModel.setDarkMode(!darkModeEnabled) }
+                            onClick = { moreOptionsViewModel.toggleDarkMode(nameViewModel, !darkModeEnabled) }
                         ) {
                             Switch(
                                 checked = darkModeEnabled,
-                                onCheckedChange = { nameViewModel.setDarkMode(it) },
+                                onCheckedChange = { moreOptionsViewModel.toggleDarkMode(nameViewModel, it) },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = MaterialTheme.colorScheme.background,
                                     checkedTrackColor = MaterialTheme.colorScheme.onBackground
@@ -161,11 +177,11 @@ fun MoreOptionsScreen(
 
                         MoreOptionItem(
                             title = "Notifications",
-                            onClick = { nameViewModel.setNotificationsEnabled(!notificationsEnabled) }
+                            onClick = { moreOptionsViewModel.toggleNotifications(nameViewModel, !notificationsEnabled) }
                         ) {
                             Switch(
                                 checked = notificationsEnabled,
-                                onCheckedChange = { nameViewModel.setNotificationsEnabled(it) },
+                                onCheckedChange = { moreOptionsViewModel.toggleNotifications(nameViewModel, it) },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = MaterialTheme.colorScheme.background,
                                     checkedTrackColor = MaterialTheme.colorScheme.onBackground
@@ -183,23 +199,16 @@ fun MoreOptionsScreen(
                     title = "About Schedo",
                     items = listOf(
                         MoreOptionItem("Rate Schedo", onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.jhainusa.jss_student"))
-                            context.startActivity(intent)
+                            moreOptionsViewModel.openPlayStore(context)
                         }),
                         MoreOptionItem("Check for Updates", onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.jhainusa.jss_student"))
-                            context.startActivity(intent)
+                            moreOptionsViewModel.openPlayStore(context)
                         }),
                         MoreOptionItem("Privacy Policy", onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://sanketjha872.github.io/schedo-privacy-policy/"))
-                            context.startActivity(intent)
+                            moreOptionsViewModel.openPrivacyPolicy(context)
                         }),
                         MoreOptionItem("Share App", onClick = {
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, "Check out Schedo, an amazing app for managing your attendance! https://play.google.com/store/apps/details?id=com.jhainusa.jss_student")
-                            }
-                            context.startActivity(Intent.createChooser(shareIntent, "Share Schedo via"))
+                            moreOptionsViewModel.shareApp(context)
                         })
                     ),
                     bgColor = MaterialTheme.colorScheme.primaryContainer
@@ -212,18 +221,13 @@ fun MoreOptionsScreen(
     if (showFeedbackDialog) {
         FeedbackDialog(
             type = feedbackType,
-            onDismiss = { showFeedbackDialog = false },
+            onDismiss = { moreOptionsViewModel.dismissFeedbackDialog() },
             onSubmit = { message ->
-                nameViewModel.sendFeedback(
+                moreOptionsViewModel.submitFeedback(
+                    context = context,
+                    nameViewModel = nameViewModel,
                     type = feedbackType,
-                    message = message,
-                    onSuccess = {
-                        Toast.makeText(context, "Feedback sent! Thank you.", Toast.LENGTH_SHORT).show()
-                        showFeedbackDialog = false
-                    },
-                    onError = { error ->
-                        Toast.makeText(context, "Failed to send: $error", Toast.LENGTH_SHORT).show()
-                    }
+                    message = message
                 )
             }
         )
@@ -232,10 +236,9 @@ fun MoreOptionsScreen(
     if (showAttendanceDialog) {
         AttendanceDialog(
             currentAttendance = desiredAttendance,
-            onDismiss = { showAttendanceDialog = false },
+            onDismiss = { moreOptionsViewModel.dismissAttendanceDialog() },
             onConfirm = { newValue ->
-                nameViewModel.saveDesiredAttendance(newValue)
-                showAttendanceDialog = false
+                moreOptionsViewModel.saveDesiredAttendance(nameViewModel, newValue)
             }
         )
     }
@@ -463,6 +466,7 @@ fun PremiumCard() {
 
 @Composable
 fun SettingsSection(title: String, items: List<MoreOptionItem>, bgColor: Color) {
+    val plusJak = FontFamily(Font(R.font.plusjakartasansmedium))
     Column {
         Text(
             text = title,

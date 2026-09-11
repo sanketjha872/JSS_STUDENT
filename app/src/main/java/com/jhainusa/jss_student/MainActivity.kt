@@ -237,7 +237,10 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable(Routes.MORE_OPTIONS) {
-                    MoreOptionsScreen(onBackClick = { navController.popBackStack() })
+                    MoreOptionsScreen(
+                        mainViewModel = viewModel,
+                        onBackClick = { navController.popBackStack() }
+                    )
                 }
 
                 composable(

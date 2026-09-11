@@ -14,6 +14,7 @@ data class Schedule(
     val teacher : String,
     val color: Long = 0,
     val totalClasses : Int = 0,
+    val roomNo: String = "",
 )
 
 @Entity(
